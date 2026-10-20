@@ -218,7 +218,7 @@ function App() {
             {matchesList.map((m) => (
               <option key={m.match_id} value={m.match_id}>
                 {m.match_id === 1 ? "★ " : "⚽ "}
-                {m.home_team} vs {m.away_team} — {m.competition} ({m.is_real_data ? "Real Record" : "Sample Data"})
+                {m.home_team} vs {m.away_team} — {m.competition} ({m.is_real_data ? "Illustrative Record" : "Demo Data"})
               </option>
             ))}
           </select>
@@ -226,7 +226,7 @@ function App() {
 
         <div className="source-attribution-pill">
           {match.is_real_data
-            ? "Source: OpenFootball / StatsBomb Standard (CC0 / CC BY 4.0)"
+            ? "Source: Premier League 2023/24 (Verified Box Score & Illustrative Key Events)"
             : "Source: Fictional demonstration events"}
         </div>
       </section>
@@ -625,7 +625,7 @@ function App() {
       />
 
       {/* Stage 9: Player rankings & top performers */}
-      <PlayerRankings rankings={rankings} />
+      <PlayerRankings rankings={rankings} teamNames={teamNames} />
 
       {/* Stage 9: Head-to-head player comparison */}
       <PlayerComparison players={players} />
@@ -1025,21 +1025,42 @@ function PlayerAnalytics({ players, teamNames, selectedTeam, onTeamChange }) {
   );
 }
 
-function PlayerRankings({ rankings }) {
+function PlayerRankings({ rankings, teamNames = [] }) {
+  const [rankingTeam, setRankingTeam] = useState("All");
+
   if (!rankings) {
     return null;
   }
 
   const { top_scorers, top_shooters, top_passers, criteria } = rankings;
 
+  const filterList = (list) => {
+    return (list || []).filter(
+      (p) => rankingTeam === "All" || p.team === rankingTeam
+    );
+  };
+
+  const filteredScorers = filterList(top_scorers);
+  const filteredShooters = filterList(top_shooters);
+  const filteredPassers = filterList(top_passers);
+
   return (
     <section className="section" id="player-rankings">
-      <div className="section-heading">
+      <div className="section-heading event-heading">
         <div>
           <p className="eyebrow">LEADERBOARDS & RANKINGS</p>
           <h2>Top performers</h2>
         </div>
-        <span className="mini-tag">SAMPLE RANKINGS</span>
+        <select
+          aria-label="Filter rankings by team"
+          value={rankingTeam}
+          onChange={(e) => setRankingTeam(e.target.value)}
+        >
+          <option value="All">All teams</option>
+          {teamNames.map((name) => (
+            <option value={name} key={name}>{name}</option>
+          ))}
+        </select>
       </div>
 
       <div className="rankings-grid">
@@ -1050,11 +1071,13 @@ function PlayerRankings({ rankings }) {
             Criteria: Most goals (tie-breaker: conversion %)
           </span>
 
-          {top_scorers.length === 0 ? (
-            <p className="empty-state">No goals recorded in this sample.</p>
+          {filteredScorers.length === 0 ? (
+            <p className="empty-state">
+              {rankingTeam === "All" ? "No goals recorded in this sample." : `No goals recorded for ${rankingTeam} in sample.`}
+            </p>
           ) : (
             <div className="ranking-list">
-              {top_scorers.map((player, idx) => (
+              {filteredScorers.map((player, idx) => (
                 <div
                   className={`ranking-item ${idx === 0 ? "top-rank" : ""}`}
                   key={player.player}
@@ -1085,11 +1108,13 @@ function PlayerRankings({ rankings }) {
             Criteria: Most shots (tie-breaker: on target)
           </span>
 
-          {top_shooters.length === 0 ? (
-            <p className="empty-state">No shot attempts recorded in sample.</p>
+          {filteredShooters.length === 0 ? (
+            <p className="empty-state">
+              {rankingTeam === "All" ? "No shot attempts recorded in sample." : `No shots recorded for ${rankingTeam} in sample.`}
+            </p>
           ) : (
             <div className="ranking-list">
-              {top_shooters.map((player, idx) => (
+              {filteredShooters.map((player, idx) => (
                 <div
                   className={`ranking-item ${idx === 0 ? "top-rank" : ""}`}
                   key={player.player}
@@ -1120,11 +1145,13 @@ function PlayerRankings({ rankings }) {
             Criteria: Most passes (tie-breaker: accuracy %)
           </span>
 
-          {top_passers.length === 0 ? (
-            <p className="empty-state">No completed passes recorded in sample.</p>
+          {filteredPassers.length === 0 ? (
+            <p className="empty-state">
+              {rankingTeam === "All" ? "No completed passes recorded in sample." : `No passes recorded for ${rankingTeam} in sample.`}
+            </p>
           ) : (
             <div className="ranking-list">
-              {top_passers.map((player, idx) => (
+              {filteredPassers.map((player, idx) => (
                 <div
                   className={`ranking-item ${idx === 0 ? "top-rank" : ""}`}
                   key={player.player}
@@ -1158,12 +1185,15 @@ function PlayerRankings({ rankings }) {
 
 function PlayerComparison({ players }) {
   const playerNames = players.map((p) => p.player);
-  const [player1Name, setPlayer1Name] = useState(
-    playerNames.length > 0 ? playerNames[0] : ""
-  );
-  const [player2Name, setPlayer2Name] = useState(
-    playerNames.length > 1 ? playerNames[1] : ""
-  );
+  const [selectedP1, setSelectedP1] = useState("");
+  const [selectedP2, setSelectedP2] = useState("");
+
+  const player1Name = players.some((p) => p.player === selectedP1)
+    ? selectedP1
+    : (playerNames[0] || "");
+  const player2Name = players.some((p) => p.player === selectedP2)
+    ? selectedP2
+    : (playerNames[1] || "");
 
   const p1 = players.find((p) => p.player === player1Name);
   const p2 = players.find((p) => p.player === player2Name);
@@ -1195,7 +1225,7 @@ function PlayerComparison({ players }) {
             <select
               id="p1-select"
               value={player1Name}
-              onChange={(e) => setPlayer1Name(e.target.value)}
+              onChange={(e) => setSelectedP1(e.target.value)}
             >
               {playerNames.map((name) => (
                 <option key={`p1-${name}`} value={name}>
@@ -1212,7 +1242,7 @@ function PlayerComparison({ players }) {
             <select
               id="p2-select"
               value={player2Name}
-              onChange={(e) => setPlayer2Name(e.target.value)}
+              onChange={(e) => setSelectedP2(e.target.value)}
             >
               {playerNames.map((name) => (
                 <option key={`p2-${name}`} value={name}>
