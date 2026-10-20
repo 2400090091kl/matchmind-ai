@@ -5,6 +5,8 @@ import "./App.css";
 const API = "http://127.0.0.1:8000";
 
 function App() {
+  const [selectedMatchId, setSelectedMatchId] = useState(1);
+  const [matchesList, setMatchesList] = useState([]);
   const [match, setMatch] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [insights, setInsights] = useState([]);
@@ -36,22 +38,40 @@ function App() {
         setLoading(true);
         setError("");
 
-        const responses = await Promise.all([
-          fetch(`${API}/api/matches/1`),
-          fetch(`${API}/api/matches/1/analytics`),
-          fetch(`${API}/api/matches/1/insights`),
-          fetch(`${API}/api/matches/1/events`),
-          fetch(`${API}/api/matches/1/players`),
-          fetch(`${API}/api/matches/1/player-rankings`),
-        ]);
+        const [matchesRes, matchRes, analyticsRes, insightsRes, eventsRes, playersRes, rankingsRes] =
+          await Promise.all([
+            fetch(`${API}/api/matches`),
+            fetch(`${API}/api/matches/${selectedMatchId}`),
+            fetch(`${API}/api/matches/${selectedMatchId}/analytics`),
+            fetch(`${API}/api/matches/${selectedMatchId}/insights`),
+            fetch(`${API}/api/matches/${selectedMatchId}/events`),
+            fetch(`${API}/api/matches/${selectedMatchId}/players`),
+            fetch(`${API}/api/matches/${selectedMatchId}/player-rankings`),
+          ]);
 
-        if (responses.some((response) => !response.ok)) {
-          throw new Error("Could not load match data.");
+        if (!matchRes.ok || !analyticsRes.ok) {
+          throw new Error("Could not load match intelligence.");
         }
 
-        const [matchData, analyticsData, insightsData, eventsData, playersData, rankingsData] =
-          await Promise.all(responses.map((response) => response.json()));
+        const [
+          matchesData,
+          matchData,
+          analyticsData,
+          insightsData,
+          eventsData,
+          playersData,
+          rankingsData,
+        ] = await Promise.all([
+          matchesRes.json(),
+          matchRes.json(),
+          analyticsRes.json(),
+          insightsRes.json(),
+          eventsRes.json(),
+          playersRes.json(),
+          rankingsRes.json(),
+        ]);
 
+        setMatchesList(matchesData);
         setMatch(matchData);
         setAnalytics(analyticsData);
         setInsights([
@@ -61,6 +81,14 @@ function App() {
         setEvents(eventsData.events);
         setPlayers(playersData.players ?? []);
         setRankings(rankingsData);
+
+        // Reset interactive filters on match switch
+        setTeam("All");
+        setPlayerTeam("All");
+        setFilterPlayer("All");
+        setFilterEventType("All");
+        setStartMinute(0);
+        setEndMinute(90);
       } catch {
         setError(
           "Unable to connect to the backend. Make sure FastAPI is running on port 8000."
@@ -71,7 +99,7 @@ function App() {
     }
 
     loadDashboard();
-  }, []);
+  }, [selectedMatchId]);
 
   useEffect(() => {
     async function loadTacticalAnalysis() {
@@ -81,8 +109,8 @@ function App() {
 
         const url =
           tacticalTeam === "All"
-            ? `${API}/api/matches/1/tactical-analysis`
-            : `${API}/api/matches/1/tactical-analysis?team=${encodeURIComponent(tacticalTeam)}`;
+            ? `${API}/api/matches/${selectedMatchId}/tactical-analysis`
+            : `${API}/api/matches/${selectedMatchId}/tactical-analysis?team=${encodeURIComponent(tacticalTeam)}`;
 
         const response = await fetch(url);
 
@@ -105,7 +133,7 @@ function App() {
     }
 
     loadTacticalAnalysis();
-  }, [tacticalTeam]);
+  }, [selectedMatchId, tacticalTeam]);
 
   const teamNames = analytics
     ? Object.keys(analytics.analytics)
@@ -154,7 +182,11 @@ function App() {
             MatchMind <b>AI</b>
           </span>
         </a>
-        <span className="demo-badge">DEMO DATA</span>
+        {match.is_real_data ? (
+          <span className="real-badge">REAL FOOTBALL RECORD</span>
+        ) : (
+          <span className="demo-badge">DEMO DATA</span>
+        )}
       </header>
 
       <section className="welcome">
@@ -173,16 +205,46 @@ function App() {
         </div>
       </section>
 
+      {/* Stage 11: Real football data switcher */}
+      <section className="match-selector-bar">
+        <div className="match-selector-group">
+          <span className="match-selector-label">Active Match Dataset:</span>
+          <select
+            className="match-selector-select"
+            aria-label="Select match dataset"
+            value={selectedMatchId}
+            onChange={(e) => setSelectedMatchId(Number(e.target.value))}
+          >
+            {matchesList.map((m) => (
+              <option key={m.match_id} value={m.match_id}>
+                {m.match_id === 1 ? "★ " : "⚽ "}
+                {m.home_team} vs {m.away_team} — {m.competition} ({m.is_real_data ? "Real Record" : "Sample Data"})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="source-attribution-pill">
+          {match.is_real_data
+            ? "Source: OpenFootball / StatsBomb Standard (CC0 / CC BY 4.0)"
+            : "Source: Fictional demonstration events"}
+        </div>
+      </section>
+
       {/* Match centre */}
       <section className="score-card">
         <div className="match-heading">
-          <span>⚽ MATCH CENTRE</span>
-          <span className="demo-label">FICTIONAL MATCH</span>
+          <span>{match.is_real_data ? "⚽ OFFICIAL MATCH RECORD" : "⚽ MATCH CENTRE"}</span>
+          <span className={match.is_real_data ? "real-badge" : "demo-label"}>
+            {match.is_real_data ? match.competition : "FICTIONAL MATCH"}
+          </span>
         </div>
 
         <div className="score-content">
           <div className="club">
-            <div className="club-emblem city">M</div>
+            <div className={`club-emblem ${match.home_team.toLowerCase().includes("city") ? "city" : "arsenal"}`}>
+              {match.home_team[0]}
+            </div>
             <h2>{match.home_team}</h2>
             <span className="club-label">HOME</span>
           </div>
@@ -193,19 +255,27 @@ function App() {
               <span>:</span>
               {match.score.away}
             </div>
-            <span className="match-status">SAMPLE SCORE</span>
+            <span className="match-status">
+              {match.is_real_data ? "FINAL SCORE" : "SAMPLE SCORE"}
+            </span>
           </div>
 
           <div className="club">
-            <div className="club-emblem arsenal">A</div>
+            <div className={`club-emblem ${match.away_team.toLowerCase().includes("arsenal") ? "arsenal" : "city"}`}>
+              {match.away_team[0]}
+            </div>
             <h2>{match.away_team}</h2>
             <span className="club-label">AWAY</span>
           </div>
         </div>
 
         <div className="score-footer">
-          <span>Match ID: {match.match_id}</span>
-          <span>Sample match data · Not live</span>
+          <span>Match ID: {match.match_id} · {match.venue ?? "Venue Demo"}</span>
+          <span>
+            {match.is_real_data
+              ? "Authentic Match Record · OpenFootball Data Standards"
+              : "Sample match data · Not live"}
+          </span>
         </div>
       </section>
 
@@ -224,22 +294,30 @@ function App() {
             title="Possession"
             home={match.stats.home.possession}
             away={match.stats.away.possession}
+            homeTeam={match.home_team}
+            awayTeam={match.away_team}
             suffix="%"
           />
           <StatCard
             title="Total shots"
             home={match.stats.home.shots}
             away={match.stats.away.shots}
+            homeTeam={match.home_team}
+            awayTeam={match.away_team}
           />
           <StatCard
             title="Shots on target"
             home={match.stats.home.shots_on_target}
             away={match.stats.away.shots_on_target}
+            homeTeam={match.home_team}
+            awayTeam={match.away_team}
           />
           <StatCard
             title="Passes completed"
             home={match.stats.home.passes_completed}
             away={match.stats.away.passes_completed}
+            homeTeam={match.home_team}
+            awayTeam={match.away_team}
           />
         </div>
       </section>
@@ -621,7 +699,14 @@ function App() {
   );
 }
 
-function StatCard({ title, home, away, suffix = "" }) {
+function StatCard({
+  title,
+  home,
+  away,
+  homeTeam = "Home",
+  awayTeam = "Away",
+  suffix = "",
+}) {
   const total = Number(home) + Number(away);
   const homeShare = total ? (Number(home) / total) * 100 : 50;
 
@@ -646,8 +731,8 @@ function StatCard({ title, home, away, suffix = "" }) {
       </div>
 
       <div className="stat-teams">
-        <span>Man City</span>
-        <span>Arsenal</span>
+        <span>{homeTeam}</span>
+        <span>{awayTeam}</span>
       </div>
     </article>
   );

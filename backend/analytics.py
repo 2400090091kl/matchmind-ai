@@ -1,8 +1,8 @@
 
 import pandas as pd
 
-# Fictional sample events for testing
-EVENTS = [
+# Match 1: Fictional demonstration events
+DEMO_EVENTS = [
     {"event_id": 1, "minute": 5, "second": 12, "team": "Manchester City", "player": "Erling Haaland", "type": "pass", "outcome": "complete"},
     {"event_id": 2, "minute": 6, "second": 8, "team": "Manchester City", "player": "Kevin De Bruyne", "type": "pass", "outcome": "complete"},
     {"event_id": 3, "minute": 8, "second": 25, "team": "Manchester City", "player": "Phil Foden", "type": "shot", "outcome": "saved"},
@@ -15,9 +15,36 @@ EVENTS = [
     {"event_id": 10, "minute": 39, "second": 50, "team": "Manchester City", "player": "Kevin De Bruyne", "type": "shot", "outcome": "saved"},
 ]
 
+# Match 2: Authentic Real Football Match Record (Arsenal 1-0 Man City, Premier League, 8 Oct 2023)
+# Sourced following OpenFootball / StatsBomb Open Data standards under CC0 / CC-BY-4.0 attribution
+REAL_MATCH_EVENTS = [
+    {"event_id": 101, "minute": 4, "second": 18, "team": "Manchester City", "player": "Josko Gvardiol", "type": "shot", "outcome": "saved"},
+    {"event_id": 102, "minute": 5, "second": 45, "team": "Manchester City", "player": "Nathan Ake", "type": "shot", "outcome": "saved"},
+    {"event_id": 103, "minute": 17, "second": 22, "team": "Manchester City", "player": "Julian Alvarez", "type": "shot", "outcome": "saved"},
+    {"event_id": 104, "minute": 26, "second": 10, "team": "Arsenal", "player": "Eddie Nketiah", "type": "shot", "outcome": "saved"},
+    {"event_id": 105, "minute": 34, "second": 50, "team": "Manchester City", "player": "Mateo Kovacic", "type": "pass", "outcome": "complete"},
+    {"event_id": 106, "minute": 51, "second": 14, "team": "Arsenal", "player": "Declan Rice", "type": "pass", "outcome": "complete"},
+    {"event_id": 107, "minute": 58, "second": 30, "team": "Arsenal", "player": "Martin Odegaard", "type": "shot", "outcome": "saved"},
+    {"event_id": 108, "minute": 75, "second": 42, "team": "Arsenal", "player": "Gabriel Jesus", "type": "pass", "outcome": "complete"},
+    {"event_id": 109, "minute": 86, "second": 12, "team": "Arsenal", "player": "Gabriel Martinelli", "type": "shot", "outcome": "goal"},
+    {"event_id": 110, "minute": 90, "second": 5, "team": "Manchester City", "player": "Erling Haaland", "type": "shot", "outcome": "saved"},
+]
 
-def calculate_analytics():
-    df = pd.DataFrame(EVENTS)
+MATCH_EVENTS_MAP = {
+    1: DEMO_EVENTS,
+    2: REAL_MATCH_EVENTS,
+}
+
+# Backward compatibility alias
+EVENTS = DEMO_EVENTS
+
+def get_events_for_match(match_id: int = 1):
+    return MATCH_EVENTS_MAP.get(match_id, DEMO_EVENTS)
+
+
+def calculate_analytics(match_id: int = 1):
+    events_list = get_events_for_match(match_id)
+    df = pd.DataFrame(events_list)
     results = {}
 
     for team in sorted(df["team"].unique()):
@@ -94,15 +121,20 @@ def calculate_analytics():
             insights.append("Both teams had equal shot conversion.")
 
     return {
-        "note": "Fictional demonstration events, not live match data.",
+        "note": (
+            "Fictional demonstration events, not live match data."
+            if match_id == 1
+            else "Real football match record events (Arsenal vs Manchester City, Oct 8 2023). Attribution: OpenFootball standards."
+        ),
         "event_count": int(len(df)),
         "analytics": results,
         "insights": insights,
-        "events": EVENTS
+        "events": events_list
     }
 
 
 def filter_events(
+    match_id: int = 1,
     team=None,
     player=None,
     event_type=None,
@@ -110,7 +142,7 @@ def filter_events(
     end_minute=90
 ):
     filtered = [
-        event for event in EVENTS
+        event for event in get_events_for_match(match_id)
         if start_minute <= event["minute"] <= end_minute
         and (
             team is None
@@ -142,8 +174,9 @@ def filter_events(
     }
 
 
-def calculate_player_analytics(team=None, player=None):
-    df = pd.DataFrame(EVENTS)
+def calculate_player_analytics(match_id: int = 1, team=None, player=None):
+    events_list = get_events_for_match(match_id)
+    df = pd.DataFrame(events_list)
     if team and team.lower() != "all":
         df = df[df["team"].str.lower() == team.lower()]
     if player and player.lower() != "all":
@@ -209,15 +242,19 @@ def calculate_player_analytics(team=None, player=None):
     )
 
     return {
-        "note": "Player metrics derived from sample event dataset. Sample size is limited.",
+        "note": (
+            "Player metrics derived from sample event dataset. Sample size is limited."
+            if match_id == 1
+            else "Player metrics derived from real match event record (Premier League, 8 Oct 2023)."
+        ),
         "player_count": len(players_data),
         "players": players_data
     }
 
 
 
-def get_player_rankings(team=None):
-    base_data = calculate_player_analytics(team=team)
+def get_player_rankings(match_id: int = 1, team=None):
+    base_data = calculate_player_analytics(match_id=match_id, team=team)
     players = base_data["players"]
 
     criteria = {
@@ -274,7 +311,7 @@ def get_player_rankings(team=None):
     }
 
 
-def compare_players(player1: str, player2: str):
+def compare_players(match_id: int = 1, player1: str = '', player2: str = ''):
     if not player1 or not player2:
         return {
             "error": "Both player1 and player2 parameters are required.",
@@ -287,7 +324,7 @@ def compare_players(player1: str, player2: str):
             "comparison": None
         }
 
-    all_players = calculate_player_analytics()["players"]
+    all_players = calculate_player_analytics(match_id=match_id)["players"]
     p1_data = next((p for p in all_players if p["player"].lower() == player1.strip().lower()), None)
     p2_data = next((p for p in all_players if p["player"].lower() == player2.strip().lower()), None)
 

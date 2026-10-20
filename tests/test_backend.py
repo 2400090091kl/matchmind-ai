@@ -33,27 +33,48 @@ class TestMatchMindBackend(unittest.TestCase):
     def test_get_matches(self):
         matches = get_matches()
         self.assertIsInstance(matches, list)
-        self.assertEqual(len(matches), 1)
+        self.assertEqual(len(matches), 2)
+        # Match 1: Demo
         self.assertEqual(matches[0]["match_id"], 1)
+        self.assertFalse(matches[0]["is_real_data"])
+        # Match 2: Real record
+        self.assertEqual(matches[1]["match_id"], 2)
+        self.assertTrue(matches[1]["is_real_data"])
+        self.assertEqual(matches[1]["home_team"], "Arsenal")
 
     def test_get_match(self):
-        match = get_match(1)
-        self.assertEqual(match["home_team"], "Manchester City")
+        match1 = get_match(1)
+        self.assertEqual(match1["home_team"], "Manchester City")
+
+        match2 = get_match(2)
+        self.assertEqual(match2["home_team"], "Arsenal")
+        self.assertEqual(match2["score"]["home"], 1)
+        self.assertEqual(match2["score"]["away"], 0)
+
         with self.assertRaises(HTTPException):
             get_match(999)
 
     def test_get_insights(self):
-        res = get_insights(1)
-        self.assertIn("insights", res)
-        self.assertGreaterEqual(len(res["insights"]), 1)
+        res1 = get_insights(1)
+        self.assertIn("insights", res1)
+        self.assertIn("Fictional demonstration data", res1["note"])
+
+        res2 = get_insights(2)
+        self.assertIn("insights", res2)
+        self.assertIn("Real football match record", res2["note"])
+
         with self.assertRaises(HTTPException):
             get_insights(999)
 
     def test_get_analytics(self):
-        res = get_analytics(1)
-        self.assertIn("analytics", res)
-        self.assertIn("Manchester City", res["analytics"])
-        self.assertIn("Arsenal", res["analytics"])
+        res1 = get_analytics(1)
+        self.assertIn("analytics", res1)
+        self.assertIn("Manchester City", res1["analytics"])
+        self.assertIn("Arsenal", res1["analytics"])
+
+        res2 = get_analytics(2)
+        self.assertIn("analytics", res2)
+        self.assertIn("Arsenal", res2["analytics"])
 
     def test_filter_events(self):
         all_events = get_match_events(1)
@@ -146,6 +167,26 @@ class TestMatchMindBackend(unittest.TestCase):
         # Unknown player should fail
         with self.assertRaises(HTTPException):
             get_match_player_comparison(1, player1="Unknown Player", player2="Bukayo Saka")
+
+    def test_real_match_integration(self):
+        # Stage 11: Real football match data tests
+        match2 = get_match(2)
+        self.assertEqual(match2["match_id"], 2)
+        self.assertEqual(match2["competition"], "Premier League 2023/24")
+        self.assertTrue(match2["is_real_data"])
+
+        # Real events
+        events2 = get_match_events(2)
+        self.assertEqual(events2["count"], 10)
+        # Check that Gabriel Martinelli scored the goal
+        martinelli_events = [e for e in events2["events"] if e["player"] == "Gabriel Martinelli"]
+        self.assertEqual(len(martinelli_events), 1)
+        self.assertEqual(martinelli_events[0]["outcome"], "goal")
+
+        # Real rankings
+        rankings2 = get_match_player_rankings(2)
+        self.assertEqual(len(rankings2["top_scorers"]), 1)
+        self.assertEqual(rankings2["top_scorers"][0]["player"], "Gabriel Martinelli")
 
     def test_tactical_analysis(self):
         tactical = get_tactical_analysis(1)
