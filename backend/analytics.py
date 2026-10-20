@@ -121,3 +121,76 @@ def filter_events(team=None, start_minute=0, end_minute=90):
         },
         "events": filtered
     }
+
+
+def calculate_player_analytics(team=None, player=None):
+    df = pd.DataFrame(EVENTS)
+    if team and team.lower() != "all":
+        df = df[df["team"].str.lower() == team.lower()]
+    if player and player.lower() != "all":
+        df = df[df["player"].str.lower() == player.lower()]
+
+    if df.empty:
+        return {
+            "note": "No events found matching the criteria.",
+            "player_count": 0,
+            "players": []
+        }
+
+    players_data = []
+    grouped = df.groupby(["player", "team"])
+
+    for (player_name, player_team), group in grouped:
+        passes = group[group["type"] == "pass"]
+        shots = group[group["type"] == "shot"]
+
+        passes_attempted = int(len(passes))
+        passes_completed = int((passes["outcome"] == "complete").sum())
+        pass_accuracy = (
+            round(passes_completed / passes_attempted * 100, 1)
+            if passes_attempted > 0
+            else None
+        )
+
+        total_shots = int(len(shots))
+        shots_on_target = int(shots["outcome"].isin(["goal", "saved"]).sum())
+        goals = int((shots["outcome"] == "goal").sum())
+        shot_conversion = (
+            round(goals / total_shots * 100, 1)
+            if total_shots > 0
+            else None
+        )
+        shots_on_target_percent = (
+            round(shots_on_target / total_shots * 100, 1)
+            if total_shots > 0
+            else None
+        )
+
+        players_data.append({
+            "player": str(player_name),
+            "team": str(player_team),
+            "total_events": int(len(group)),
+            "passes_attempted": passes_attempted,
+            "passes_completed": passes_completed,
+            "pass_accuracy_percent": pass_accuracy,
+            "shots": total_shots,
+            "shots_on_target": shots_on_target,
+            "shots_on_target_percent": shots_on_target_percent,
+            "goals": goals,
+            "shot_conversion_percent": shot_conversion,
+        })
+
+    players_data.sort(
+        key=lambda x: (
+            -x["goals"],
+            -x["passes_completed"],
+            -x["shots"],
+            x["player"]
+        )
+    )
+
+    return {
+        "note": "Player metrics derived from sample event dataset. Sample size is limited.",
+        "player_count": len(players_data),
+        "players": players_data
+    }

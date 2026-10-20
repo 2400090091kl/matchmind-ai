@@ -1,12 +1,16 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from backend.analytics import calculate_analytics, filter_events
+from backend.analytics import (
+    calculate_analytics,
+    filter_events,
+    calculate_player_analytics,
+)
 
 app = FastAPI(
     title="MatchMind AI",
     description="AI-powered football match intelligence",
-    version="0.4.0"
+    version="0.5.0"
 )
 
 # Allow the React frontend to communicate with FastAPI
@@ -52,7 +56,7 @@ def home():
     return {
         "message": "Welcome to MatchMind AI!",
         "status": "running",
-        "version": "0.4.0"
+        "version": "0.5.0"
     }
 
 
@@ -139,6 +143,21 @@ def get_match_events(
         start_minute=start_minute,
         end_minute=end_minute
     )
+
+
+@app.get("/api/matches/{match_id}/players")
+def get_match_players(
+    match_id: int,
+    team: str | None = None,
+    player: str | None = None
+):
+    if match_id != MATCH["match_id"]:
+        raise HTTPException(
+            status_code=404,
+            detail="Match not found"
+        )
+
+    return calculate_player_analytics(team=team, player=player)
 
 
 @app.get("/api/matches/{match_id}/tactical-analysis")

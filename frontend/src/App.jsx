@@ -17,6 +17,9 @@ function App() {
   const [tacticalLoading, setTacticalLoading] = useState(true);
   const [tacticalError, setTacticalError] = useState("");
 
+  const [players, setPlayers] = useState([]);
+  const [playerTeam, setPlayerTeam] = useState("All");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -31,13 +34,14 @@ function App() {
           fetch(`${API}/api/matches/1/analytics`),
           fetch(`${API}/api/matches/1/insights`),
           fetch(`${API}/api/matches/1/events`),
+          fetch(`${API}/api/matches/1/players`),
         ]);
 
         if (responses.some((response) => !response.ok)) {
           throw new Error("Could not load match data.");
         }
 
-        const [matchData, analyticsData, insightsData, eventsData] =
+        const [matchData, analyticsData, insightsData, eventsData, playersData] =
           await Promise.all(responses.map((response) => response.json()));
 
         setMatch(matchData);
@@ -47,7 +51,8 @@ function App() {
           ...analyticsData.insights,
         ]);
         setEvents(eventsData.events);
-      } catch (err) {
+        setPlayers(playersData.players ?? []);
+      } catch {
         setError(
           "Unable to connect to the backend. Make sure FastAPI is running on port 8000."
         );
@@ -491,6 +496,14 @@ function App() {
         </div>
       </section>
 
+      {/* Player performance analytics */}
+      <PlayerAnalytics
+        players={players}
+        teamNames={teamNames}
+        selectedTeam={playerTeam}
+        onTeamChange={setPlayerTeam}
+      />
+
       {/* Match event log */}
       <section className="section">
         <div className="section-heading event-heading">
@@ -777,6 +790,104 @@ function VisualAnalytics({ events, teamAnalytics }) {
           </div>
         ))}
       </article>
+    </section>
+  );
+}
+
+function PlayerAnalytics({ players, teamNames, selectedTeam, onTeamChange }) {
+  const filteredPlayers = players.filter((p) => {
+    return selectedTeam === "All" || p.team === selectedTeam;
+  });
+
+  return (
+    <section className="section" id="player-analytics">
+      <div className="section-heading event-heading">
+        <div>
+          <p className="eyebrow">INDIVIDUAL METRICS</p>
+          <h2>Player performance analytics</h2>
+        </div>
+        <select
+          aria-label="Filter players by team"
+          value={selectedTeam}
+          onChange={(e) => onTeamChange(e.target.value)}
+        >
+          <option value="All">All teams</option>
+          {teamNames.map((name) => (
+            <option value={name} key={name}>{name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="player-grid">
+        {filteredPlayers.length === 0 ? (
+          <p className="empty-state">No player records available for this filter.</p>
+        ) : (
+          filteredPlayers.map((player) => {
+            const isCity = player.team === "Manchester City";
+            return (
+              <article className="panel player-card" key={player.player}>
+                <div className="player-card-header">
+                  <div>
+                    <h3 className="player-name">{player.player}</h3>
+                    <span className={`player-team-pill ${isCity ? "team-city" : "team-arsenal"}`}>
+                      {player.team}
+                    </span>
+                  </div>
+                  <span className="player-events-badge">
+                    {player.total_events} {player.total_events === 1 ? "event" : "events"}
+                  </span>
+                </div>
+
+                <div className="player-stats-grid">
+                  <div className="player-stat-box">
+                    <span className="stat-label">Goals</span>
+                    <strong className="stat-value highlight-green">{player.goals}</strong>
+                  </div>
+                  <div className="player-stat-box">
+                    <span className="stat-label">Shots (Target)</span>
+                    <strong className="stat-value">
+                      {player.shots} <span className="stat-sub">({player.shots_on_target})</span>
+                    </strong>
+                  </div>
+                  <div className="player-stat-box">
+                    <span className="stat-label">Passes (C/A)</span>
+                    <strong className="stat-value">
+                      {player.passes_completed}/{player.passes_attempted}
+                    </strong>
+                  </div>
+                  <div className="player-stat-box">
+                    <span className="stat-label">Pass Accuracy</span>
+                    <strong className="stat-value">
+                      {player.pass_accuracy_percent !== null
+                        ? `${player.pass_accuracy_percent}%`
+                        : "N/A*"}
+                    </strong>
+                  </div>
+                </div>
+
+                {player.pass_accuracy_percent !== null ? (
+                  <div className="progress-track" style={{ marginTop: "12px" }}>
+                    <div
+                      className="progress-fill"
+                      style={{ width: `${player.pass_accuracy_percent}%` }}
+                    />
+                  </div>
+                ) : (
+                  <p className="stat-footnote">*No passes recorded in sample</p>
+                )}
+
+                <div className="player-card-footer">
+                  <span>Conversion: {player.shot_conversion_percent !== null ? `${player.shot_conversion_percent}%` : "N/A"}</span>
+                  <span>On-target %: {player.shots_on_target_percent !== null ? `${player.shots_on_target_percent}%` : "N/A"}</span>
+                </div>
+              </article>
+            );
+          })
+        )}
+      </div>
+      <p className="footnote" style={{ marginTop: "14px" }}>
+        * Pass accuracy is marked N/A where a player attempted zero passes in the sample. Statistics are derived strictly from the recorded event sample.
+      </p>
     </section>
   );
 }
