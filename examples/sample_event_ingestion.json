@@ -1,0 +1,98 @@
+{
+  "home_team": "Liverpool",
+  "away_team": "Chelsea",
+  "competition": "Premier League 2023/24 (Demonstration Ingest)",
+  "venue": "Anfield, Liverpool",
+  "events": [
+    {
+      "event_id": 501,
+      "minute": 9,
+      "second": 45,
+      "team": "Liverpool",
+      "player": "Mohamed Salah",
+      "type": "pass",
+      "outcome": "complete"
+    },
+    {
+      "event_id": 502,
+      "minute": 14,
+      "second": 12,
+      "team": "Liverpool",
+      "player": "Darwin Nunez",
+      "type": "shot",
+      "outcome": "saved"
+    },
+    {
+      "event_id": 503,
+      "minute": 23,
+      "second": 4,
+      "team": "Liverpool",
+      "player": "Mohamed Salah",
+      "type": "shot",
+      "outcome": "goal"
+    },
+    {
+      "event_id": 504,
+      "minute": 31,
+      "second": 50,
+      "team": "Chelsea",
+      "player": "Enzo Fernandez",
+      "type": "pass",
+      "outcome": "complete"
+    },
+    {
+      "event_id": 505,
+      "minute": 42,
+      "second": 18,
+      "team": "Chelsea",
+      "player": "Cole Palmer",
+      "type": "shot",
+      "outcome": "saved"
+    },
+    {
+      "event_id": 506,
+      "minute": 55,
+      "second": 32,
+      "team": "Chelsea",
+      "player": "Nicolas Jackson",
+      "type": "shot",
+      "outcome": "off_target"
+    },
+    {
+      "event_id": 507,
+      "minute": 68,
+      "second": 10,
+      "team": "Liverpool",
+      "player": "Dominik Szoboszlai",
+      "type": "pass",
+      "outcome": "complete"
+    },
+    {
+      "event_id": 508,
+      "minute": 77,
+      "second": 25,
+      "team": "Liverpool",
+      "player": "Mohamed Salah",
+      "type": "shot",
+      "outcome": "saved"
+    },
+    {
+      "event_id": 509,
+      "minute": 84,
+      "second": 5,
+      "team": "Chelsea",
+      "player": "Cole Palmer",
+      "type": "shot",
+      "outcome": "goal"
+    },
+    {
+      "event_id": 510,
+      "minute": 89,
+      "second": 40,
+      "team": "Liverpool",
+      "player": "Alexis Mac Allister",
+      "type": "pass",
+      "outcome": "complete"
+    }
+  ]
+}

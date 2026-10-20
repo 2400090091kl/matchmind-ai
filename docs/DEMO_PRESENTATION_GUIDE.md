@@ -44,7 +44,7 @@ This guide provides a structured walkthrough for presenting MatchMind AI to hack
 - [x] **Backend running:** `python -m uvicorn backend.main:app --port 8000 --reload`
 - [x] **Frontend running:** `npm run dev` in `frontend/` (accessible at `http://localhost:5173/`)
 - [x] **Zero-cost compliance verified:** No paid APIs, no API keys required, zero billing risk.
-- [x] **Automated test suite passed:** 17 unit tests verifying calculations, endpoints, and error handling (`python -m unittest discover tests`).
+- [x] **Automated test suite passed:** 22 unit tests verifying calculations, endpoints, ingestion, patterns, and error handling (`python -m unittest discover tests`).
 - [x] **Data transparency verified:** Fictional demo match clearly distinguished from authentic real match record.
 - [x] **Responsive viewport tested:** UI scales cleanly across desktop, tablet, and mobile screens.
 

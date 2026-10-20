@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const API = "http://127.0.0.1:8000";
+const API = (import.meta.env && import.meta.env.VITE_API_URL) ? import.meta.env.VITE_API_URL : "http://127.0.0.1:8000";
 
 function App() {
   const [selectedMatchId, setSelectedMatchId] = useState(1);
@@ -26,6 +26,16 @@ function App() {
   // Audience persona: "analyst" (technical) vs "fan" (plain English)
   const [personaMode, setPersonaMode] = useState("analyst");
 
+  // Important moments & pattern detection
+  const [moments, setMoments] = useState([]);
+  const [patterns, setPatterns] = useState([]);
+  const [momentFilter, setMomentFilter] = useState("All");
+
+  // Broadcast Overlay Mode (OBS streaming)
+  const [broadcastMode, setBroadcastMode] = useState(false);
+  const [broadcastCompact, setBroadcastCompact] = useState(false);
+  const [broadcastTransparent, setBroadcastTransparent] = useState(false);
+
   // Stage 10: Interactive filters
   const [filterPlayer, setFilterPlayer] = useState("All");
   const [filterEventType, setFilterEventType] = useState("All");
@@ -41,16 +51,27 @@ function App() {
         setLoading(true);
         setError("");
 
-        const [matchesRes, matchRes, analyticsRes, insightsRes, eventsRes, playersRes, rankingsRes] =
-          await Promise.all([
-            fetch(`${API}/api/matches`),
-            fetch(`${API}/api/matches/${selectedMatchId}`),
-            fetch(`${API}/api/matches/${selectedMatchId}/analytics`),
-            fetch(`${API}/api/matches/${selectedMatchId}/insights`),
-            fetch(`${API}/api/matches/${selectedMatchId}/events`),
-            fetch(`${API}/api/matches/${selectedMatchId}/players`),
-            fetch(`${API}/api/matches/${selectedMatchId}/player-rankings`),
-          ]);
+        const [
+          matchesRes,
+          matchRes,
+          analyticsRes,
+          insightsRes,
+          eventsRes,
+          playersRes,
+          rankingsRes,
+          momentsRes,
+          patternsRes,
+        ] = await Promise.all([
+          fetch(`${API}/api/matches`),
+          fetch(`${API}/api/matches/${selectedMatchId}`),
+          fetch(`${API}/api/matches/${selectedMatchId}/analytics`),
+          fetch(`${API}/api/matches/${selectedMatchId}/insights`),
+          fetch(`${API}/api/matches/${selectedMatchId}/events`),
+          fetch(`${API}/api/matches/${selectedMatchId}/players`),
+          fetch(`${API}/api/matches/${selectedMatchId}/player-rankings`),
+          fetch(`${API}/api/matches/${selectedMatchId}/important-moments`),
+          fetch(`${API}/api/matches/${selectedMatchId}/patterns`),
+        ]);
 
         if (!matchRes.ok || !analyticsRes.ok) {
           throw new Error("Could not load match intelligence.");
@@ -64,6 +85,8 @@ function App() {
           eventsData,
           playersData,
           rankingsData,
+          momentsData,
+          patternsData,
         ] = await Promise.all([
           matchesRes.json(),
           matchRes.json(),
@@ -72,6 +95,8 @@ function App() {
           eventsRes.json(),
           playersRes.json(),
           rankingsRes.json(),
+          momentsRes.json(),
+          patternsRes.json(),
         ]);
 
         setMatchesList(matchesData);
@@ -84,6 +109,8 @@ function App() {
         setEvents(eventsData.events);
         setPlayers(playersData.players ?? []);
         setRankings(rankingsData);
+        setMoments(momentsData.moments ?? []);
+        setPatterns(patternsData.patterns ?? []);
 
         // Reset interactive filters on match switch
         setTeam("All");
@@ -92,6 +119,7 @@ function App() {
         setFilterEventType("All");
         setStartMinute(0);
         setEndMinute(90);
+        setMomentFilter("All");
       } catch {
         setError(
           "Unable to connect to the backend. Make sure FastAPI is running on port 8000."
@@ -176,6 +204,26 @@ function App() {
     );
   }
 
+  if (broadcastMode) {
+    return (
+      <BroadcastOverlay
+        match={match}
+        matchesList={matchesList}
+        selectedMatchId={selectedMatchId}
+        onSelectMatchId={setSelectedMatchId}
+        analytics={analytics}
+        insights={insights}
+        moments={moments}
+        isCompact={broadcastCompact}
+        onToggleCompact={() => setBroadcastCompact(!broadcastCompact)}
+        isTransparent={broadcastTransparent}
+        onToggleTransparent={() => setBroadcastTransparent(!broadcastTransparent)}
+        personaMode={personaMode}
+        onExit={() => setBroadcastMode(false)}
+      />
+    );
+  }
+
   return (
     <main className="dashboard">
       <header className="topbar">
@@ -186,6 +234,14 @@ function App() {
           </span>
         </a>
         <div className="topbar-controls">
+          <button
+            type="button"
+            className="broadcast-toggle-btn"
+            onClick={() => setBroadcastMode(true)}
+            title="Open OBS-ready Broadcast Overlay Mode for stream graphics"
+          >
+            📺 Broadcast Mode
+          </button>
           <div
             className="persona-switcher"
             role="radiogroup"
@@ -673,6 +729,21 @@ function App() {
       <VisualAnalytics
         events={filteredEvents}
         teamAnalytics={analytics.analytics}
+      />
+
+      {/* Important moments breakdown */}
+      <ImportantMomentsSection
+        moments={moments}
+        filter={momentFilter}
+        onFilterChange={setMomentFilter}
+        personaMode={personaMode}
+        isRealData={match.is_real_data}
+      />
+
+      {/* Football pattern detection */}
+      <PatternDetectionSection
+        patterns={patterns}
+        personaMode={personaMode}
       />
 
       {/* Tactical analysis */}
@@ -1851,6 +1922,409 @@ function FilterControlBar({
         </div>
       </div>
     </section>
+  );
+}
+
+function ImportantMomentsSection({
+  moments,
+  filter,
+  onFilterChange,
+  personaMode,
+  isRealData,
+}) {
+  const filtered = moments.filter((m) => {
+    if (filter === "Goals") return m.is_goal;
+    if (filter === "ShotsOnTarget") return m.outcome === "goal" || m.outcome === "saved";
+    return true;
+  });
+
+  return (
+    <section className="section" id="important-moments">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">
+            {personaMode === "analyst" ? "EVIDENCE-BASED EVENT BREAKDOWN" : "THE TURNING POINTS"}
+          </p>
+          <h2>
+            {personaMode === "analyst" ? "Important match moments" : "Match-defining moments"}
+          </h2>
+        </div>
+        <span className="ai-tag">✦ FACTS & CONTEXT</span>
+      </div>
+
+      <div className="moments-filter-bar">
+        <span className="section-note" style={{ marginRight: "8px" }}>Filter moments:</span>
+        <button
+          type="button"
+          className={`moment-filter-btn ${filter === "All" ? "active" : ""}`}
+          onClick={() => onFilterChange("All")}
+        >
+          All Key Events ({moments.length})
+        </button>
+        <button
+          type="button"
+          className={`moment-filter-btn ${filter === "Goals" ? "active" : ""}`}
+          onClick={() => onFilterChange("Goals")}
+        >
+          ⚽ Goals Only ({moments.filter((m) => m.is_goal).length})
+        </button>
+        <button
+          type="button"
+          className={`moment-filter-btn ${filter === "ShotsOnTarget" ? "active" : ""}`}
+          onClick={() => onFilterChange("ShotsOnTarget")}
+        >
+          🎯 Shots on Target ({moments.filter((m) => m.outcome === "goal" || m.outcome === "saved").length})
+        </button>
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="empty-state">No moments match the active filter.</p>
+      ) : (
+        <div className="moments-grid">
+          {filtered.map((moment) => (
+            <article
+              key={moment.event_id}
+              className={`moment-card ${moment.is_goal ? "moment-goal" : ""}`}
+            >
+              <div className="moment-card-header">
+                <span className="moment-minute-badge">
+                  {moment.minute}′{moment.second ? ` ${moment.second}s` : ""}
+                </span>
+                <span
+                  className={`moment-type-badge ${
+                    moment.is_goal
+                      ? "type-goal"
+                      : moment.outcome === "saved"
+                        ? "type-saved"
+                        : "type-pass"
+                  }`}
+                >
+                  {moment.is_goal ? "⚽ GOAL" : moment.type === "shot" ? "🎯 SHOT ON TARGET" : "↗ PASS"}
+                </span>
+              </div>
+
+              <div className="moment-player-info">
+                <strong>{moment.player}</strong>
+                <span>({moment.team})</span>
+              </div>
+
+              <div className="moment-fact-block">
+                <span className="moment-fact-label">Observed Fact</span>
+                <p className="moment-fact-text">{moment.observed_fact}</p>
+              </div>
+
+              <div className="moment-context-block">
+                <span className="moment-context-label">
+                  {personaMode === "analyst" ? "Analytical Significance" : "Why It Matters for Supporters"}
+                </span>
+                <p className="moment-context-text">{moment.analytical_context}</p>
+              </div>
+
+              <p className="moment-caveat">
+                {moment.sequence_caveat}
+              </p>
+            </article>
+          ))}
+        </div>
+      )}
+
+      <p className="footnote" style={{ marginTop: "16px" }}>
+        Notice: {isRealData
+          ? "Moments reflect illustrative key attacking sequences from official Premier League match logs. No unrecorded passes or movements are fabricated."
+          : "Moments are strictly derived from the demonstration event dataset."}
+      </p>
+    </section>
+  );
+}
+
+function PatternDetectionSection({ patterns, personaMode }) {
+  if (!patterns || patterns.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="section" id="pattern-detection">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">
+            {personaMode === "analyst" ? "DATA PATTERN DETECTION" : "OBSERVABLE MATCH PATTERNS"}
+          </p>
+          <h2>
+            {personaMode === "analyst" ? "Tactical pattern detection" : "Key trends in the data"}
+          </h2>
+        </div>
+        <span className="ai-tag">✦ STATISTICAL EVIDENCE</span>
+      </div>
+
+      <div className="patterns-grid">
+        {patterns.map((pat, idx) => (
+          <article className="pattern-card" key={`pat-${idx}`}>
+            <div className="pattern-header">
+              <span className="pattern-category-badge">{pat.category}</span>
+              <span className="pattern-confidence">{pat.team}</span>
+            </div>
+            <h4 className="pattern-metric">{pat.metric}</h4>
+            <p className="pattern-evidence">
+              <strong>Evidence:</strong> {pat.evidence}
+            </p>
+            <p className="pattern-interpretation">
+              <strong>Interpretation:</strong> {pat.tactical_interpretation}
+            </p>
+          </article>
+        ))}
+      </div>
+
+      <p className="footnote" style={{ marginTop: "14px" }}>
+        Pattern Caveat: Observations are derived strictly from recorded discrete event fields. Spatial coordinates, pressing intensity, and tracking chains are absent and not inferred.
+      </p>
+    </section>
+  );
+}
+
+function BroadcastOverlay({
+  match,
+  matchesList,
+  selectedMatchId,
+  onSelectMatchId,
+  insights,
+  moments,
+  isCompact,
+  onToggleCompact,
+  isTransparent,
+  onToggleTransparent,
+  personaMode,
+  onExit,
+}) {
+  const homeStats = match.stats.home;
+  const awayStats = match.stats.away;
+  const keyMoment = moments.find((m) => m.is_goal) || moments[0];
+  const primaryInsight = insights[0] || "Match tracking active.";
+
+  const isCityHome = match.home_team.toLowerCase().includes("city");
+  const isArsenalAway = match.away_team.toLowerCase().includes("arsenal");
+
+  const totalShots = homeStats.shots + awayStats.shots;
+  const homeShotShare = totalShots ? (homeStats.shots / totalShots) * 100 : 50;
+
+  return (
+    <main className={`broadcast-view ${isTransparent ? "transparent-bg" : ""}`}>
+      {/* Broadcast Operator Control Bar */}
+      <nav className="broadcast-toolbar" aria-label="Broadcast controls">
+        <div className="broadcast-toolbar-left">
+          <button
+            type="button"
+            className="broadcast-exit-btn"
+            onClick={onExit}
+          >
+            ← Exit Broadcast (Return to Dashboard)
+          </button>
+
+          <button
+            type="button"
+            className={`broadcast-mode-btn ${isCompact ? "active" : ""}`}
+            onClick={onToggleCompact}
+          >
+            {isCompact ? "⛶ Switch to Full Overlay" : "▫ Switch to Compact Scorebug"}
+          </button>
+
+          <button
+            type="button"
+            className={`broadcast-mode-btn ${isTransparent ? "active" : ""}`}
+            onClick={onToggleTransparent}
+          >
+            {isTransparent ? "⬛ Studio Dark Backdrop" : "🏁 Transparent OBS Backdrop"}
+          </button>
+        </div>
+
+        <div className="broadcast-toolbar-right">
+          <label htmlFor="broadcast-match-select" style={{ fontSize: "11px", color: "#8da491" }}>Active Match:</label>
+          <select
+            id="broadcast-match-select"
+            value={selectedMatchId}
+            onChange={(e) => onSelectMatchId(Number(e.target.value))}
+            className="match-selector-select"
+            style={{ padding: "6px 10px", fontSize: "12px" }}
+          >
+            {matchesList.map((m) => (
+              <option key={m.match_id} value={m.match_id}>
+                {m.home_team} vs {m.away_team} ({m.is_real_data ? "PL Record" : "Demo"})
+              </option>
+            ))}
+          </select>
+        </div>
+      </nav>
+
+      {/* Broadcast Canvas */}
+      <div className="broadcast-canvas">
+        {isCompact ? (
+          /* Compact Scorebug Layout (Fits small OBS window source) */
+          <div className="broadcast-compact-box">
+            <div className="scorebug-top-strip">
+              <span className="scorebug-league-tag">
+                ⚽ {match.competition.toUpperCase()}
+              </span>
+              <span className="scorebug-status-tag">
+                {match.is_real_data ? "FINAL SCORE (OFFICIAL)" : "SAMPLE SCORE (DEMO)"}
+              </span>
+            </div>
+            <div className="scorebug-match-row" style={{ padding: "16px 20px" }}>
+              <div className="scorebug-team">
+                <div className={`scorebug-crest ${isCityHome ? "city" : "arsenal"}`}>
+                  {match.home_team[0]}
+                </div>
+                <h2>{match.home_team}</h2>
+              </div>
+              <div className="scorebug-score-box" style={{ padding: "8px 18px" }}>
+                <span className="scorebug-num">{match.score.home}</span>
+                <span className="scorebug-colon">:</span>
+                <span className="scorebug-num">{match.score.away}</span>
+              </div>
+              <div className="scorebug-team away">
+                <div className={`scorebug-crest ${isArsenalAway ? "arsenal" : "city"}`}>
+                  {match.away_team[0]}
+                </div>
+                <h2>{match.away_team}</h2>
+              </div>
+            </div>
+            <div className="scorebug-lower-third" style={{ padding: "10px 18px", fontSize: "12px" }}>
+              {keyMoment && (
+                <span>
+                  ⚽ {keyMoment.minute}′ {keyMoment.player} ({keyMoment.outcome === "goal" ? "GOAL" : keyMoment.outcome})
+                </span>
+              )}
+              <span style={{ color: "#7b917f", fontSize: "10px" }}>
+                {match.is_real_data ? "PL Verified Box Score" : "Demo Data"}
+              </span>
+            </div>
+          </div>
+        ) : (
+          /* Full Broadcast Lower-Third & Graphics Frame */
+          <div className="broadcast-scorebug">
+            <div className="scorebug-top-strip">
+              <span className="scorebug-league-tag">
+                ⚽ {match.competition.toUpperCase()}
+              </span>
+              <span className="scorebug-status-tag">
+                {match.is_real_data ? "FINAL SCORE (OFFICIAL)" : "SAMPLE SCORE (DEMO)"}
+              </span>
+            </div>
+
+            <div className="scorebug-match-row">
+              <div className="scorebug-team">
+                <div className={`scorebug-crest ${isCityHome ? "city" : "arsenal"}`}>
+                  {match.home_team[0]}
+                </div>
+                <div>
+                  <h2>{match.home_team}</h2>
+                  <span style={{ fontSize: "11px", color: "#8ea491", letterSpacing: "1px" }}>HOME</span>
+                </div>
+              </div>
+
+              <div className="scorebug-score-box">
+                <span className="scorebug-num">{match.score.home}</span>
+                <span className="scorebug-colon">:</span>
+                <span className="scorebug-num">{match.score.away}</span>
+              </div>
+
+              <div className="scorebug-team away">
+                <div className={`scorebug-crest ${isArsenalAway ? "arsenal" : "city"}`}>
+                  {match.away_team[0]}
+                </div>
+                <div>
+                  <h2>{match.away_team}</h2>
+                  <span style={{ fontSize: "11px", color: "#8ea491", letterSpacing: "1px" }}>AWAY</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Lower-Third Telemetry Ticker */}
+            <div className="scorebug-lower-third">
+              {keyMoment ? (
+                <div className="scorebug-key-moment">
+                  <span className="scorebug-moment-badge">
+                    {keyMoment.is_goal ? "⚽ KEY MOMENT" : "🎯 MATCH EVENT"}
+                  </span>
+                  <strong>
+                    {keyMoment.minute}′ {keyMoment.player} ({keyMoment.team}): {keyMoment.is_goal ? "GOAL" : keyMoment.outcome}
+                  </strong>
+                </div>
+              ) : (
+                <div className="scorebug-key-moment">
+                  <span className="scorebug-moment-badge">📊 TELEMETRY</span>
+                  <span>{primaryInsight}</span>
+                </div>
+              )}
+
+              <div className="scorebug-telemetry-pill">
+                {personaMode === "fan" ? "🎉 CASUAL FAN FEED" : "📊 ANALYST FEED"} · {match.is_real_data ? "Official Summary" : "Demo Data"}
+              </div>
+            </div>
+
+            {/* Broadcast Key Stats Strip */}
+            <div className="broadcast-stats-strip" style={{ margin: "16px 24px 20px" }}>
+              <div className="broadcast-stat-card">
+                <div className="broadcast-stat-header">
+                  <span>{match.home_team}</span>
+                  <span>Possession</span>
+                  <span>{match.away_team}</span>
+                </div>
+                <div className="broadcast-stat-values">
+                  <span>{homeStats.possession}%</span>
+                  <span>vs</span>
+                  <span>{awayStats.possession}%</span>
+                </div>
+                <div className="progress-track">
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${homeStats.possession}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="broadcast-stat-card">
+                <div className="broadcast-stat-header">
+                  <span>{match.home_team}</span>
+                  <span>Total Shots</span>
+                  <span>{match.away_team}</span>
+                </div>
+                <div className="broadcast-stat-values">
+                  <span>{homeStats.shots}</span>
+                  <span>vs</span>
+                  <span>{awayStats.shots}</span>
+                </div>
+                <div className="progress-track">
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${homeShotShare}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="broadcast-stat-card">
+                <div className="broadcast-stat-header">
+                  <span>{match.home_team}</span>
+                  <span>Shots on Target</span>
+                  <span>{match.away_team}</span>
+                </div>
+                <div className="broadcast-stat-values">
+                  <span>{homeStats.shots_on_target}</span>
+                  <span>vs</span>
+                  <span>{awayStats.shots_on_target}</span>
+                </div>
+                <div className="progress-track">
+                  <div
+                    className="progress-fill"
+                    style={{
+                      width: `${(homeStats.shots_on_target / Math.max(1, homeStats.shots_on_target + awayStats.shots_on_target)) * 100}%`
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
 

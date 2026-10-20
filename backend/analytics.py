@@ -37,8 +37,25 @@ MATCH_EVENTS_MAP = {
     2: REAL_MATCH_EVENTS,
 }
 
+# Custom uploaded events map (isolated from built-in matches 1 & 2)
+CUSTOM_EVENTS_MAP = {}
+
 # Backward compatibility alias
 EVENTS = DEMO_EVENTS
+
+
+def register_custom_events(match_id: int, events: list[dict]):
+    """Safely stores user-ingested events in the isolated custom registry."""
+    if match_id in (1, 2):
+        raise ValueError("Cannot overwrite built-in matches 1 or 2.")
+    CUSTOM_EVENTS_MAP[match_id] = events
+
+
+def delete_custom_events(match_id: int):
+    """Removes a custom dataset from memory."""
+    if match_id in (1, 2):
+        raise ValueError("Cannot delete built-in matches 1 or 2.")
+    CUSTOM_EVENTS_MAP.pop(match_id, None)
 
 
 def get_events_for_match(match_id: int | str = 1):
@@ -46,7 +63,11 @@ def get_events_for_match(match_id: int | str = 1):
         m_id = int(match_id)
     except (ValueError, TypeError):
         m_id = 1
-    return MATCH_EVENTS_MAP.get(m_id, DEMO_EVENTS)
+    if m_id in MATCH_EVENTS_MAP:
+        return MATCH_EVENTS_MAP[m_id]
+    if m_id in CUSTOM_EVENTS_MAP:
+        return CUSTOM_EVENTS_MAP[m_id]
+    return DEMO_EVENTS
 
 
 def calculate_analytics(match_id: int | str = 1):
@@ -451,4 +472,171 @@ def compare_players(
         "player1": p1_data,
         "player2": p2_data,
         "observations": points
+    }
+
+
+def get_important_moments(match_id: int | str = 1):
+    """Identifies and explains critical match moments with strict factual grounding."""
+    try:
+        m_id = int(match_id)
+    except (ValueError, TypeError):
+        m_id = 1
+
+    events_list = get_events_for_match(m_id)
+    moments = []
+
+    for e in events_list:
+        is_goal = e.get("outcome") == "goal"
+        is_shot = e.get("type") == "shot"
+        is_key_action = is_shot or is_goal or (e.get("type") == "pass" and e.get("outcome") == "complete")
+
+        if is_key_action:
+            minute = e.get("minute", 0)
+            second = e.get("second", 0)
+            player = e.get("player", "Unknown")
+            team = e.get("team", "Unknown")
+            e_type = e.get("type", "unknown")
+            outcome = e.get("outcome", "unknown")
+
+            sec_str = f" {second}s" if second else ""
+            fact = f"Minute {minute}'{sec_str}: {player} ({team}) registered a {e_type} resulting in '{outcome}'."
+
+            if is_goal:
+                context = (
+                    f"Direct goal-scoring event by {player}. Broke or shifted the match deadlock for {team}."
+                )
+            elif outcome == "saved":
+                context = (
+                    f"Accurate shot on target by {player} testing the goalkeeper and forcing a defensive save."
+                )
+            elif e_type == "shot":
+                context = (
+                    f"Attacking attempt by {player} ({team}) contributing to team shot creation."
+                )
+            else:
+                context = (
+                    f"Successful ball progression by {player} ({team}) maintaining possession continuity."
+                )
+
+            moments.append({
+                "event_id": e.get("event_id"),
+                "minute": minute,
+                "second": second,
+                "team": team,
+                "player": player,
+                "type": e_type,
+                "outcome": outcome,
+                "is_goal": is_goal,
+                "observed_fact": fact,
+                "analytical_context": context,
+                "sequence_caveat": "Preceding multi-pass sequence, defensive positioning, and off-ball movement cannot be established from this discrete event sample."
+            })
+
+    moments.sort(key=lambda x: (x["minute"], x["second"]))
+
+    return {
+        "match_id": m_id,
+        "total_moments": len(moments),
+        "goals_recorded": sum(1 for m in moments if m["is_goal"]),
+        "shots_on_target_recorded": sum(1 for m in moments if m["outcome"] in ("goal", "saved")),
+        "moments": moments,
+        "provenance_note": (
+            "Fictional demonstration events."
+            if m_id == 1
+            else "Illustrative key-event sample based on verified Premier League match record (Arsenal 1-0 Man City, 8 Oct 2023)."
+            if m_id == 2
+            else "Custom ingested match event sequence."
+        )
+    }
+
+
+def detect_match_patterns(match_id: int | str = 1):
+    """Detects defensible football tactical patterns from available event data without fabrication."""
+    try:
+        m_id = int(match_id)
+    except (ValueError, TypeError):
+        m_id = 1
+
+    events_list = get_events_for_match(m_id)
+    df = pd.DataFrame(events_list)
+    patterns = []
+
+    if df.empty:
+        return {
+            "match_id": m_id,
+            "patterns": [],
+            "note": "No events available for pattern detection.",
+            "limitations": "Requires at least one recorded event."
+        }
+
+    shots_df = df[df["type"] == "shot"]
+    for team in sorted(df["team"].unique()):
+        t_shots = shots_df[shots_df["team"] == team]
+        t_count = len(t_shots)
+        t_goals = int((t_shots["outcome"] == "goal").sum())
+        t_sot = int(t_shots["outcome"].isin(["goal", "saved"]).sum())
+        conv = round(t_goals / t_count * 100, 1) if t_count > 0 else 0.0
+        sot_pct = round(t_sot / t_count * 100, 1) if t_count > 0 else 0.0
+
+        if t_count > 0:
+            patterns.append({
+                "category": "Finishing Precision",
+                "team": team,
+                "metric": f"{t_goals} goal(s) from {t_count} recorded shot(s) ({conv}% conversion)",
+                "evidence": f"{t_sot} of {t_count} shot(s) reached the target ({sot_pct}% on target).",
+                "tactical_interpretation": (
+                    f"{team} capitalized efficiently on their recorded scoring chances."
+                    if conv >= 30.0
+                    else f"{team} generated attempts but faced resilient goalkeeping or missed target."
+                ),
+                "confidence": "High (Direct event counts)"
+            })
+
+    passes_df = df[df["type"] == "pass"]
+    for team in sorted(df["team"].unique()):
+        t_passes = passes_df[passes_df["team"] == team]
+        p_att = len(t_passes)
+        p_comp = int((t_passes["outcome"] == "complete").sum())
+        acc = round(p_comp / p_att * 100, 1) if p_att > 0 else 0.0
+
+        if p_att > 0:
+            patterns.append({
+                "category": "Ball Circulation Composure",
+                "team": team,
+                "metric": f"{p_comp}/{p_att} completed passes ({acc}%) in recorded sequences",
+                "evidence": f"Pass completion records across {p_att} tracked passes in sample.",
+                "tactical_interpretation": (
+                    f"{team} exhibited composed ball retention during their attacking build-up."
+                    if acc >= 75.0
+                    else f"{team} prioritized direct attacking play with higher turnover risk."
+                ),
+                "confidence": "High (Direct event counts)"
+            })
+
+    early_events = df[df["minute"] <= 30]
+    late_events = df[df["minute"] >= 60]
+    early_shots = len(early_events[early_events["type"] == "shot"])
+    late_shots = len(late_events[late_events["type"] == "shot"])
+
+    patterns.append({
+        "category": "Temporal Danger Distribution",
+        "team": "Match Sequence",
+        "metric": f"{early_shots} shot(s) in early phase (0-30') vs {late_shots} shot(s) in late phase (60-90')",
+        "evidence": f"Recorded event timestamps across early (0-30') and closing (60-90') periods.",
+        "tactical_interpretation": (
+            "Higher offensive activity concentrated in the opening half-hour."
+            if early_shots > late_shots
+            else "Attacking urgency intensified in the final 30 minutes of the match."
+            if late_shots > early_shots
+            else "Attacking attempts were evenly distributed across opening and closing phases."
+        ),
+        "confidence": "Moderate (Constrained by sample size)"
+    })
+
+    return {
+        "match_id": m_id,
+        "sample_size": len(events_list),
+        "patterns": patterns,
+        "note": "Patterns are strictly derived from observable discrete event attributes.",
+        "limitations": "Spatial pitch coordinates, player tracking chains, and off-ball movement are absent from the dataset and not inferred."
     }

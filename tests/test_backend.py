@@ -12,6 +12,12 @@ from backend.main import (
     get_match_player_rankings,
     get_match_player_comparison,
     get_tactical_analysis,
+    get_match_important_moments,
+    get_match_patterns_endpoint,
+    ingest_custom_match,
+    delete_custom_match_endpoint,
+    CustomMatchIngestPayload,
+    EventIngestItem,
 )
 from backend.analytics import (
     calculate_analytics,
@@ -198,6 +204,119 @@ class TestMatchMindBackend(unittest.TestCase):
 
         with self.assertRaises(HTTPException):
             get_tactical_analysis(1, team="Invalid Team")
+
+    def test_important_moments(self):
+        # Match 1: Demo
+        moments1 = get_match_important_moments(1)
+        self.assertIn("moments", moments1)
+        self.assertGreater(moments1["total_moments"], 0)
+        self.assertIn("goals_recorded", moments1)
+        for m in moments1["moments"]:
+            self.assertIn("observed_fact", m)
+            self.assertIn("analytical_context", m)
+            self.assertIn("sequence_caveat", m)
+
+        # Match 2: Real record
+        moments2 = get_match_important_moments(2)
+        self.assertEqual(moments2["goals_recorded"], 1)
+        martinelli_moment = next((m for m in moments2["moments"] if m["player"] == "Gabriel Martinelli" and m["is_goal"]), None)
+        self.assertIsNotNone(martinelli_moment)
+        self.assertEqual(martinelli_moment["minute"], 86)
+
+        with self.assertRaises(HTTPException):
+            get_match_important_moments(999)
+
+    def test_patterns_detection(self):
+        patterns1 = get_match_patterns_endpoint(1)
+        self.assertIn("patterns", patterns1)
+        self.assertIn("limitations", patterns1)
+        self.assertGreater(len(patterns1["patterns"]), 0)
+        for p in patterns1["patterns"]:
+            self.assertIn("category", p)
+            self.assertIn("metric", p)
+            self.assertIn("evidence", p)
+            self.assertIn("tactical_interpretation", p)
+
+        with self.assertRaises(HTTPException):
+            get_match_patterns_endpoint(999)
+
+    def test_custom_match_ingestion_and_isolation(self):
+        payload = CustomMatchIngestPayload(
+            home_team="Liverpool",
+            away_team="Chelsea",
+            competition="Hackathon Test Cup",
+            venue="Anfield",
+            events=[
+                EventIngestItem(event_id=501, minute=10, second=15, team="Liverpool", player="Mohamed Salah", type="shot", outcome="goal"),
+                EventIngestItem(event_id=502, minute=25, second=30, team="Chelsea", player="Cole Palmer", type="shot", outcome="saved"),
+                EventIngestItem(event_id=503, minute=40, second=0, team="Liverpool", player="Trent Alexander-Arnold", type="pass", outcome="complete"),
+                EventIngestItem(event_id=504, minute=70, second=45, team="Chelsea", player="Enzo Fernandez", type="pass", outcome="incomplete"),
+            ]
+        )
+        res = ingest_custom_match(payload)
+        self.assertEqual(res["status"], "success")
+        custom_id = res["match_id"]
+        self.assertGreaterEqual(custom_id, 1000)
+
+        # Verify custom match appears in get_matches()
+        matches = get_matches()
+        custom_in_list = next((m for m in matches if m["match_id"] == custom_id), None)
+        self.assertIsNotNone(custom_in_list)
+        self.assertEqual(custom_in_list["home_team"], "Liverpool")
+        self.assertEqual(custom_in_list["score"]["home"], 1)
+        self.assertEqual(custom_in_list["score"]["away"], 0)
+
+        # Verify analytics works on custom match
+        custom_analytics = get_analytics(custom_id)
+        self.assertIn("Liverpool", custom_analytics["analytics"])
+        self.assertEqual(custom_analytics["analytics"]["Liverpool"]["goals"], 1)
+
+        # Verify important moments works on custom match
+        custom_moments = get_match_important_moments(custom_id)
+        self.assertEqual(custom_moments["goals_recorded"], 1)
+
+        # Built-in isolation: Cannot delete built-in matches 1 or 2
+        with self.assertRaises(HTTPException):
+            delete_custom_match_endpoint(1)
+        with self.assertRaises(HTTPException):
+            delete_custom_match_endpoint(2)
+
+        # Cleanup: delete custom match
+        del_res = delete_custom_match_endpoint(custom_id)
+        self.assertEqual(del_res["status"], "deleted")
+
+        # Now fetching it returns 404
+        with self.assertRaises(HTTPException):
+            get_match(custom_id)
+
+    def test_custom_match_validation_errors(self):
+        # 1. Identical home and away teams
+        with self.assertRaises(ValueError):
+            CustomMatchIngestPayload(
+                home_team="Arsenal",
+                away_team="Arsenal",
+                events=[EventIngestItem(event_id=1, minute=10, team="Arsenal", player="Saka", type="shot", outcome="goal")]
+            )
+
+        # 2. Event team doesn't match home or away
+        with self.assertRaises(ValueError):
+            CustomMatchIngestPayload(
+                home_team="Arsenal",
+                away_team="Chelsea",
+                events=[EventIngestItem(event_id=1, minute=10, team="Barcelona", player="Pedri", type="pass", outcome="complete")]
+            )
+
+        # 3. Invalid pass outcome (cannot be "goal")
+        with self.assertRaises(ValueError):
+            EventIngestItem(event_id=1, minute=10, team="Arsenal", player="Saka", type="pass", outcome="goal")
+
+        # 4. Invalid shot outcome (cannot be "complete")
+        with self.assertRaises(ValueError):
+            EventIngestItem(event_id=1, minute=10, team="Arsenal", player="Saka", type="shot", outcome="complete")
+
+        # 5. Invalid minute range (> 120 or < 0)
+        with self.assertRaises(ValueError):
+            EventIngestItem(event_id=1, minute=150, team="Arsenal", player="Saka", type="shot", outcome="goal")
 
 
 if __name__ == "__main__":
