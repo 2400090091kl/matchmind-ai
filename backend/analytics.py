@@ -15,8 +15,10 @@ DEMO_EVENTS = [
     {"event_id": 10, "minute": 39, "second": 50, "team": "Manchester City", "player": "Kevin De Bruyne", "type": "shot", "outcome": "saved"},
 ]
 
-# Match 2: Authentic Real Football Match Record (Arsenal 1-0 Man City, Premier League, 8 Oct 2023)
-# Sourced following OpenFootball / StatsBomb Open Data standards under CC0 / CC-BY-4.0 attribution
+# Match 2: Illustrative Reconstructed Key Events based on Premier League 2023/24 Match Record
+# (Arsenal 1-0 Manchester City, 8 Oct 2023 at Emirates Stadium, Gabriel Martinelli 86' winner).
+# Box-score match statistics are verified from official public Premier League records.
+# The 10 events below represent an illustrative sample of key attacking sequences.
 REAL_MATCH_EVENTS = [
     {"event_id": 101, "minute": 4, "second": 18, "team": "Manchester City", "player": "Josko Gvardiol", "type": "shot", "outcome": "saved"},
     {"event_id": 102, "minute": 5, "second": 45, "team": "Manchester City", "player": "Nathan Ake", "type": "shot", "outcome": "saved"},
@@ -38,12 +40,22 @@ MATCH_EVENTS_MAP = {
 # Backward compatibility alias
 EVENTS = DEMO_EVENTS
 
-def get_events_for_match(match_id: int = 1):
-    return MATCH_EVENTS_MAP.get(match_id, DEMO_EVENTS)
+
+def get_events_for_match(match_id: int | str = 1):
+    try:
+        m_id = int(match_id)
+    except (ValueError, TypeError):
+        m_id = 1
+    return MATCH_EVENTS_MAP.get(m_id, DEMO_EVENTS)
 
 
-def calculate_analytics(match_id: int = 1):
-    events_list = get_events_for_match(match_id)
+def calculate_analytics(match_id: int | str = 1):
+    try:
+        m_id = int(match_id)
+    except (ValueError, TypeError):
+        m_id = 1
+
+    events_list = get_events_for_match(m_id)
     df = pd.DataFrame(events_list)
     results = {}
 
@@ -123,8 +135,8 @@ def calculate_analytics(match_id: int = 1):
     return {
         "note": (
             "Fictional demonstration events, not live match data."
-            if match_id == 1
-            else "Real football match record events (Arsenal vs Manchester City, Oct 8 2023). Attribution: OpenFootball standards."
+            if m_id == 1
+            else "Illustrative key-event sample based on verified Premier League match record (Arsenal 1-0 Man City, 8 Oct 2023)."
         ),
         "event_count": int(len(df)),
         "analytics": results,
@@ -134,15 +146,29 @@ def calculate_analytics(match_id: int = 1):
 
 
 def filter_events(
-    match_id: int = 1,
-    team=None,
-    player=None,
-    event_type=None,
-    start_minute=0,
-    end_minute=90
+    match_id: int | str = 1,
+    team: str | None = None,
+    player: str | None = None,
+    event_type: str | None = None,
+    start_minute: int = 0,
+    end_minute: int = 90
 ):
+    # Handle if called with team as first positional parameter e.g. filter_events("Arsenal")
+    if isinstance(match_id, str):
+        if match_id.isdigit():
+            m_id = int(match_id)
+        else:
+            team = match_id
+            m_id = 1
+    else:
+        try:
+            m_id = int(match_id)
+        except (ValueError, TypeError):
+            m_id = 1
+
+    events_list = get_events_for_match(m_id)
     filtered = [
-        event for event in get_events_for_match(match_id)
+        event for event in events_list
         if start_minute <= event["minute"] <= end_minute
         and (
             team is None
@@ -164,6 +190,7 @@ def filter_events(
     return {
         "count": len(filtered),
         "filters": {
+            "match_id": m_id,
             "team": team,
             "player": player,
             "event_type": event_type,
@@ -174,9 +201,27 @@ def filter_events(
     }
 
 
-def calculate_player_analytics(match_id: int = 1, team=None, player=None):
-    events_list = get_events_for_match(match_id)
+def calculate_player_analytics(
+    match_id: int | str = 1,
+    team: str | None = None,
+    player: str | None = None
+):
+    # Handle if called with team as first positional parameter e.g. calculate_player_analytics("Arsenal")
+    if isinstance(match_id, str):
+        if match_id.isdigit():
+            m_id = int(match_id)
+        else:
+            team = match_id
+            m_id = 1
+    else:
+        try:
+            m_id = int(match_id)
+        except (ValueError, TypeError):
+            m_id = 1
+
+    events_list = get_events_for_match(m_id)
     df = pd.DataFrame(events_list)
+
     if team and team.lower() != "all":
         df = df[df["team"].str.lower() == team.lower()]
     if player and player.lower() != "all":
@@ -244,17 +289,29 @@ def calculate_player_analytics(match_id: int = 1, team=None, player=None):
     return {
         "note": (
             "Player metrics derived from sample event dataset. Sample size is limited."
-            if match_id == 1
-            else "Player metrics derived from real match event record (Premier League, 8 Oct 2023)."
+            if m_id == 1
+            else "Player metrics derived from illustrative key-event sample (Arsenal vs Man City, 8 Oct 2023)."
         ),
         "player_count": len(players_data),
         "players": players_data
     }
 
 
+def get_player_rankings(match_id: int | str = 1, team: str | None = None):
+    # Handle if called with team as first positional parameter e.g. get_player_rankings("Manchester City")
+    if isinstance(match_id, str):
+        if match_id.isdigit():
+            m_id = int(match_id)
+        else:
+            team = match_id
+            m_id = 1
+    else:
+        try:
+            m_id = int(match_id)
+        except (ValueError, TypeError):
+            m_id = 1
 
-def get_player_rankings(match_id: int = 1, team=None):
-    base_data = calculate_player_analytics(match_id=match_id, team=team)
+    base_data = calculate_player_analytics(match_id=m_id, team=team)
     players = base_data["players"]
 
     criteria = {
@@ -303,7 +360,11 @@ def get_player_rankings(match_id: int = 1, team=None):
     )
 
     return {
-        "note": "Rankings are based strictly on the 10-event demo sample. No broader season performance is implied.",
+        "note": (
+            "Rankings are based strictly on the 10-event demo sample. No broader season performance is implied."
+            if m_id == 1
+            else "Rankings are based strictly on the 10-event illustrative sample from the 8 Oct 2023 fixture."
+        ),
         "criteria": criteria,
         "top_scorers": top_scorers,
         "top_shooters": shooters,
@@ -311,7 +372,27 @@ def get_player_rankings(match_id: int = 1, team=None):
     }
 
 
-def compare_players(match_id: int = 1, player1: str = '', player2: str = ''):
+def compare_players(
+    match_id: int | str = 1,
+    player1: str = "",
+    player2: str = ""
+):
+    # Handle if called as compare_players("Erling Haaland", "Bukayo Saka")
+    if isinstance(match_id, str) and not player2 and player1:
+        player2 = player1
+        player1 = match_id
+        m_id = 1
+    elif isinstance(match_id, str):
+        if match_id.isdigit():
+            m_id = int(match_id)
+        else:
+            m_id = 1
+    else:
+        try:
+            m_id = int(match_id)
+        except (ValueError, TypeError):
+            m_id = 1
+
     if not player1 or not player2:
         return {
             "error": "Both player1 and player2 parameters are required.",
@@ -324,7 +405,7 @@ def compare_players(match_id: int = 1, player1: str = '', player2: str = ''):
             "comparison": None
         }
 
-    all_players = calculate_player_analytics(match_id=match_id)["players"]
+    all_players = calculate_player_analytics(match_id=m_id)["players"]
     p1_data = next((p for p in all_players if p["player"].lower() == player1.strip().lower()), None)
     p2_data = next((p for p in all_players if p["player"].lower() == player2.strip().lower()), None)
 
@@ -362,7 +443,11 @@ def compare_players(match_id: int = 1, player1: str = '', player2: str = ''):
         points.append(f"Both players registered {p1_data['shots']} shot(s).")
 
     return {
-        "note": "Side-by-side comparison based on fictional event sample data.",
+        "note": (
+            "Side-by-side comparison based on fictional event sample data."
+            if m_id == 1
+            else "Side-by-side comparison based on illustrative event sample data from the 8 Oct 2023 fixture."
+        ),
         "player1": p1_data,
         "player2": p2_data,
         "observations": points

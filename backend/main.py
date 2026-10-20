@@ -29,7 +29,8 @@ app.add_middleware(
 # Matches Database:
 # Match 1: Fictional demonstration match
 # Match 2: Real football match record (Arsenal vs Manchester City, Premier League, 8 Oct 2023)
-# Sourced following OpenFootball / StatsBomb Open Data standards under CC0 / CC-BY-4.0 attribution
+# Box score statistics are verified from official Premier League match logs.
+# The 10 match events represent an illustrative reconstructed key-event sample.
 MATCHES = {
     1: {
         "match_id": 1,
@@ -66,7 +67,8 @@ MATCHES = {
         "status": "REAL_RECORD",
         "competition": "Premier League 2023/24",
         "venue": "Emirates Stadium, London",
-        "source_label": "Real Match Record (OpenFootball / StatsBomb Standard)",
+        "source_label": "Premier League 2023/24 (Verified Box Score & Illustrative Key Events)",
+        "provenance": "Verified match summary (Premier League official match records, 8 Oct 2023) with illustrative reconstructed key-event sample.",
         "is_real_data": True,
         "score": {
             "home": 1,
@@ -77,13 +79,13 @@ MATCHES = {
                 "possession": 49,
                 "shots": 12,
                 "shots_on_target": 2,
-                "passes_completed": 430
+                "passes_completed": 433
             },
             "away": {
                 "possession": 51,
                 "shots": 4,
                 "shots_on_target": 1,
-                "passes_completed": 448
+                "passes_completed": 453
             }
         }
     }
@@ -154,7 +156,7 @@ def get_insights(match_id: int):
     note = (
         "Fictional demonstration data, not a real live match."
         if match_id == 1
-        else "Real football match record (Arsenal 1-0 Man City, 8 Oct 2023). Attribution: OpenFootball standards."
+        else "Real football match record (Arsenal 1-0 Man City, 8 Oct 2023) with illustrative key events."
     )
 
     return {
@@ -337,6 +339,8 @@ def get_tactical_analysis(
         "note": (
             "Based on fictional sample events. "
             "These are preliminary suggestions, not live-match conclusions."
+            if match_id == 1
+            else "Based on illustrative key events from the 8 Oct 2023 Premier League match record."
         ),
         "reports": reports
     }
