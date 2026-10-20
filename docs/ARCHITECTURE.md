@@ -109,3 +109,4 @@ flowchart TD
 - **Zero Paid Dependencies:** No cloud subscriptions, no paid APIs, no rate-limited paywalls.
 - **No Secrets Exposed:** Zero API keys, passwords, or credentials in codebase or Git history.
 - **Resilient Execution:** 100% functional locally and offline.
+

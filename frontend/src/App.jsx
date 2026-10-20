@@ -23,6 +23,9 @@ function App() {
   const [playerTeam, setPlayerTeam] = useState("All");
   const [rankings, setRankings] = useState(null);
 
+  // Audience persona: "analyst" (technical) vs "fan" (plain English)
+  const [personaMode, setPersonaMode] = useState("analyst");
+
   // Stage 10: Interactive filters
   const [filterPlayer, setFilterPlayer] = useState("All");
   const [filterEventType, setFilterEventType] = useState("All");
@@ -182,26 +185,75 @@ function App() {
             MatchMind <b>AI</b>
           </span>
         </a>
-        {match.is_real_data ? (
-          <span className="real-badge">ILLUSTRATIVE REAL RECORD</span>
-        ) : (
-          <span className="demo-badge">DEMO DATA</span>
-        )}
+        <div className="topbar-controls">
+          <div
+            className="persona-switcher"
+            role="radiogroup"
+            aria-label="Experience Mode"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={personaMode === "analyst"}
+              className={`persona-btn ${personaMode === "analyst" ? "active" : ""}`}
+              onClick={() => setPersonaMode("analyst")}
+              title="Analyst Mode: Detailed telemetry, tactical coaching recommendations, and raw metrics"
+            >
+              <span className="persona-icon">📊</span>
+              <span>Analyst</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={personaMode === "fan"}
+              className={`persona-btn ${personaMode === "fan" ? "active" : ""}`}
+              onClick={() => setPersonaMode("fan")}
+              title="Casual Fan Mode: Plain-English match story, hero moments, and simplified summaries"
+            >
+              <span className="persona-icon">🎉</span>
+              <span>Casual Fan</span>
+            </button>
+          </div>
+          {match.is_real_data ? (
+            <span className="real-badge">ILLUSTRATIVE REAL RECORD</span>
+          ) : (
+            <span className="demo-badge">DEMO DATA</span>
+          )}
+        </div>
       </header>
 
       <section className="welcome">
         <div>
-          <p className="eyebrow">FOOTBALL INTELLIGENCE PLATFORM</p>
+          <p className="eyebrow">
+            {personaMode === "analyst"
+              ? "FOOTBALL INTELLIGENCE PLATFORM · ANALYST EDITION"
+              : "MATCHDAY COMPANION · CASUAL FAN EDITION"}
+          </p>
           <h1>
-            See beyond <span>the score.</span>
+            {personaMode === "analyst" ? (
+              <>
+                See beyond <span>the score.</span>
+              </>
+            ) : (
+              <>
+                The story behind <span>the match.</span>
+              </>
+            )}
           </h1>
           <p className="subtitle">
-            Match analytics, team performance and tactical insights in one place.
+            {personaMode === "analyst"
+              ? "Match analytics, team performance, advanced telemetry and tactical insights in one place."
+              : "Plain-English match stories, key player moments, and simplified game summaries for supporters."}
           </p>
         </div>
 
-        <div className="status-pill">
-          <span className="status-dot" /> API CONNECTED
+        <div className="welcome-badges">
+          <div className={`mode-indicator-pill ${personaMode === "fan" ? "fan-mode" : ""}`}>
+            {personaMode === "analyst" ? "📊 ANALYST VIEW" : "🎉 CASUAL FAN VIEW"}
+          </div>
+          <div className="status-pill">
+            <span className="status-dot" /> API CONNECTED
+          </div>
         </div>
       </section>
 
@@ -279,12 +331,71 @@ function App() {
         </div>
       </section>
 
+      {/* Casual Fan Mode: Plain-English narrative & key takeaways */}
+      {personaMode === "fan" && (
+        <section className="fan-narrative-banner panel">
+          <div className="fan-narrative-header">
+            <span className="fan-pill-tag">🎉 CASUAL FAN MATCH STORY</span>
+            <span className="fan-read-time">1 MIN READ</span>
+          </div>
+          <h3 className="fan-narrative-title">
+            {match.match_id === 1
+              ? "City Controlled the Ball, but Arsenal Struck Back for an Exciting 1 - 1 Stalemate"
+              : "Arsenal Seal Dramatic 1 - 0 Triumph Over City with Late Martinelli Strike"}
+          </h3>
+          <p className="fan-narrative-desc">
+            {match.match_id === 1
+              ? "Manchester City dictated 62% possession and fired 14 shots, opening the scoring through Erling Haaland in the 12th minute. But Arsenal stood firm, executing a clinical attacking counter for Bukayo Saka to equalize in the 24th minute to share the points."
+              : "In a heavyweight battle of tactical discipline, Arsenal held reigning champions Manchester City to just 4 total shots all match. The decisive breakthrough arrived in the 86th minute when substitute Gabriel Martinelli's strike deflected past the keeper to ignite Emirates Stadium."}
+          </p>
+          <div className="fan-takeaways-grid">
+            <div className="fan-takeaway-item">
+              <span className="fan-takeaway-icon">⚡</span>
+              <div>
+                <strong>{match.match_id === 1 ? "Tempo & Ball Control" : "Even Territory"}</strong>
+                <p>
+                  {match.match_id === 1
+                    ? "City dictated play with 520 passes to Arsenal's 310, setting a high attacking tempo."
+                    : "Possession was split almost equally (Arsenal 51% vs 49% City) across 90 minutes."}
+                </p>
+              </div>
+            </div>
+            <div className="fan-takeaway-item">
+              <span className="fan-takeaway-icon">🎯</span>
+              <div>
+                <strong>{match.match_id === 1 ? "Finishing Power" : "Defensive Lockout"}</strong>
+                <p>
+                  {match.match_id === 1
+                    ? "Both teams made their big chances count, scoring with 50% shot conversion in the key sequence."
+                    : "Arsenal restricted City to only 1 shot on target, shutting down Haaland and Alvarez."}
+                </p>
+              </div>
+            </div>
+            <div className="fan-takeaway-item">
+              <span className="fan-takeaway-icon">⭐</span>
+              <div>
+                <strong>{match.match_id === 1 ? "Key Duel" : "Match Hero"}</strong>
+                <p>
+                  {match.match_id === 1
+                    ? "Haaland vs Saka: both talismanic attackers found the back of the net in style."
+                    : "Gabriel Martinelli's late 86' strike proved the difference between the title contenders."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Match statistics */}
       <section className="section">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">PERFORMANCE OVERVIEW</p>
-            <h2>Match statistics</h2>
+            <p className="eyebrow">
+              {personaMode === "analyst" ? "PERFORMANCE OVERVIEW" : "AT A GLANCE"}
+            </p>
+            <h2>
+              {personaMode === "analyst" ? "Match statistics" : "Key scoreboard numbers"}
+            </h2>
           </div>
           <span className="section-note">
             {match.is_real_data ? "Verified official match statistics" : "From sample demonstration data"}
@@ -299,6 +410,8 @@ function App() {
             homeTeam={match.home_team}
             awayTeam={match.away_team}
             suffix="%"
+            fanExplanation="Share of ball control"
+            personaMode={personaMode}
           />
           <StatCard
             title="Total shots"
@@ -306,6 +419,8 @@ function App() {
             away={match.stats.away.shots}
             homeTeam={match.home_team}
             awayTeam={match.away_team}
+            fanExplanation="Attempts to score"
+            personaMode={personaMode}
           />
           <StatCard
             title="Shots on target"
@@ -313,6 +428,8 @@ function App() {
             away={match.stats.away.shots_on_target}
             homeTeam={match.home_team}
             awayTeam={match.away_team}
+            fanExplanation="Accurate tests on goal"
+            personaMode={personaMode}
           />
           <StatCard
             title="Passes completed"
@@ -320,6 +437,8 @@ function App() {
             away={match.stats.away.passes_completed}
             homeTeam={match.home_team}
             awayTeam={match.away_team}
+            fanExplanation="Successful team links"
+            personaMode={personaMode}
           />
         </div>
       </section>
@@ -328,14 +447,68 @@ function App() {
       <section className="section">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">EVENT DATA ANALYSIS</p>
-            <h2>Team analytics</h2>
+            <p className="eyebrow">
+              {personaMode === "analyst" ? "EVENT DATA ANALYSIS" : "TEAM BREAKDOWN"}
+            </p>
+            <h2>
+              {personaMode === "analyst" ? "Team analytics" : "Team performance summary"}
+            </h2>
           </div>
+          {personaMode === "fan" && (
+            <span className="mini-tag">SIMPLIFIED VIEW</span>
+          )}
         </div>
 
         <div className="analytics-grid">
           {teamNames.map((name) => {
             const stats = analytics.analytics[name];
+
+            if (personaMode === "fan") {
+              return (
+                <article className="panel team-panel" key={name}>
+                  <div className="team-panel-heading">
+                    <h3>{name}</h3>
+                    <span className="mini-tag">EVENT SAMPLE</span>
+                  </div>
+
+                  <div className="metric-row">
+                    <span>Passing Rhythm</span>
+                    <strong>{stats.passes_completed} of {stats.passes_attempted} completed</strong>
+                  </div>
+                  <div className="progress-track">
+                    <div
+                      className="progress-fill"
+                      style={{ width: `${stats.pass_accuracy_percent}%` }}
+                    />
+                  </div>
+                  <p className="fan-stat-tip">
+                    {stats.pass_accuracy_percent}% accuracy — {stats.pass_accuracy_percent >= 80 ? "Smooth and reliable passing tempo" : "Focused on direct forward movement"}
+                  </p>
+
+                  <div className="metric-row" style={{ marginTop: "16px" }}>
+                    <span>Attacking Threat</span>
+                    <strong>{stats.shots} shots ({stats.shots_on_target} on target)</strong>
+                  </div>
+                  <div className="progress-track">
+                    <div
+                      className="progress-fill"
+                      style={{ width: `${Math.min(100, Math.max(0, stats.shots_on_target_percent ?? 0))}%` }}
+                    />
+                  </div>
+
+                  <div className="metric-row" style={{ marginTop: "16px" }}>
+                    <span>Goals in Sample</span>
+                    <strong className="highlight-green">{stats.goals}</strong>
+                  </div>
+
+                  <div className="fan-player-note">
+                    {stats.goals > 0
+                      ? `🎯 ${name} converted their big chance into a goal.`
+                      : `🛡️ ${name} recorded ${stats.shots} shot(s) in this key phase.`}
+                  </div>
+                </article>
+              );
+            }
 
             return (
               <article className="panel team-panel" key={name}>
@@ -415,30 +588,58 @@ function App() {
       <section className="section">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">AUTOMATED OBSERVATIONS</p>
-            <h2>Match insights</h2>
+            <p className="eyebrow">
+              {personaMode === "analyst" ? "AUTOMATED OBSERVATIONS" : "PLAIN-ENGLISH MATCH SUMMARY"}
+            </p>
+            <h2>
+              {personaMode === "analyst" ? "Match insights" : "Supporter takeaways"}
+            </h2>
           </div>
-          <span className="ai-tag">✦ RULE-BASED</span>
+          <span className="ai-tag">
+            {personaMode === "analyst" ? "✦ RULE-BASED" : "✦ FAN HIGHLIGHTS"}
+          </span>
         </div>
 
         <div className="insights-grid">
-          {insights.map((insight, index) => (
-            <article
-              className="panel insight-card"
-              key={`${insight}-${index}`}
-            >
-              <span className="insight-number">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <p>{insight}</p>
-            </article>
-          ))}
+          {personaMode === "analyst"
+            ? insights.map((insight, index) => (
+                <article
+                  className="panel insight-card"
+                  key={`${insight}-${index}`}
+                >
+                  <span className="insight-number">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <p>{insight}</p>
+                </article>
+              ))
+            : (
+                (match.match_id === 1 ? [
+                  "1. Ball Control & Pressure: Manchester City controlled 62% of the ball and played 520 passes, pinning Arsenal back for extended periods.",
+                  "2. Fast & Lethal Counter: Arsenal stayed disciplined in defense and punished City on the break with a clinical goal from Bukayo Saka.",
+                  "3. High Shot Quality: Half of all recorded shots hit the target, showing both goalkeepers had to stay sharp under pressure.",
+                  "4. Talisman Impact: Erling Haaland and Bukayo Saka proved to be the difference-makers for their respective sides."
+                ] : [
+                  "1. Tactical Chess Match: Possession was almost split down the middle (Arsenal 51% vs 49% City) in a tense, balanced contest.",
+                  "2. Defensive Masterclass: Arsenal's backline effectively locked down Manchester City, limiting them to just a single shot on target.",
+                  "3. Super-Sub Winner: Gabriel Martinelli made an immediate impact off the bench, netting the decisive 86th-minute winner.",
+                  "4. Emirates Statement: This victory marked Arsenal's first Premier League win over Manchester City since December 2015."
+                ]).map((summary, idx) => (
+                  <article className="panel insight-card" key={`fan-insight-${idx}`}>
+                    <span className="insight-number">✦</span>
+                    <p>{summary}</p>
+                  </article>
+                ))
+              )
+          }
         </div>
 
         <p className="footnote">
-          {match.is_real_data
-            ? "Observations are generated from verified match stats & illustrative key events."
-            : "Observations are generated from fictional sample data."}
+          {personaMode === "analyst"
+            ? (match.is_real_data
+                ? "Observations are generated from verified match stats & illustrative key events."
+                : "Observations are generated from fictional sample data.")
+            : "Plain-English supporter summary derived from verified match stats and recorded moments."}
         </p>
       </section>
 
@@ -458,6 +659,7 @@ function App() {
         onEndMinuteChange={setEndMinute}
         totalCount={events.length}
         filteredCount={filteredEvents.length}
+        personaMode={personaMode}
         onReset={() => {
           setTeam("All");
           setFilterPlayer("All");
@@ -473,15 +675,21 @@ function App() {
         teamAnalytics={analytics.analytics}
       />
 
-      {/* NEW: Tactical analysis */}
+      {/* Tactical analysis */}
       <section className="section" id="tactical-analysis">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">TACTICAL INTELLIGENCE</p>
-            <h2>Tactical analysis</h2>
+            <p className="eyebrow">
+              {personaMode === "analyst" ? "TACTICAL INTELLIGENCE" : "THE MANAGER'S GAMEPLAN"}
+            </p>
+            <h2>
+              {personaMode === "analyst" ? "Tactical analysis" : "Coach's corner for supporters"}
+            </h2>
           </div>
 
-          <span className="ai-tag">✦ MATCHMIND ANALYST</span>
+          <span className="ai-tag">
+            {personaMode === "analyst" ? "✦ MATCHMIND ANALYST" : "✦ SUPPORTER STRATEGY GUIDE"}
+          </span>
         </div>
 
         <div className="panel team-panel">
@@ -489,7 +697,9 @@ function App() {
             <div>
               <h3>Team analysis report</h3>
               <p className="section-note">
-                Explore sample statistics and suggested actions.
+                {personaMode === "analyst"
+                  ? "Explore sample statistics and suggested actions."
+                  : "Supporter breakdown: how each team structured play and adjusted tactics."}
               </p>
             </div>
 
@@ -539,7 +749,9 @@ function App() {
               >
                 <div className="team-panel-heading">
                   <h3>{report.team}</h3>
-                  <span className="mini-tag">SAMPLE REPORT</span>
+                  <span className="mini-tag">
+                    {personaMode === "analyst" ? "SAMPLE REPORT" : "FAN STRATEGY GUIDE"}
+                  </span>
                 </div>
 
                 <div className="metric-row">
@@ -569,7 +781,7 @@ function App() {
                 </div>
 
                 <h4 style={{ marginTop: "24px" }}>
-                  Analysis
+                  {personaMode === "analyst" ? "Analysis" : `What Went Right for ${report.team}`}
                 </h4>
 
                 <div className="insights-grid">
@@ -579,7 +791,7 @@ function App() {
                       key={`${report.team}-analysis-${index}`}
                     >
                       <span className="insight-number">
-                        {String(index + 1).padStart(2, "0")}
+                        {personaMode === "analyst" ? String(index + 1).padStart(2, "0") : "✓"}
                       </span>
                       <p>{item}</p>
                     </div>
@@ -587,7 +799,7 @@ function App() {
                 </div>
 
                 <h4 style={{ marginTop: "24px" }}>
-                  Tactical recommendations
+                  {personaMode === "analyst" ? "Tactical recommendations" : "Supporter Advice: What to Watch Next"}
                 </h4>
 
                 <div className="insights-grid">
@@ -596,7 +808,7 @@ function App() {
                       className="panel insight-card"
                       key={`${report.team}-recommendation-${index}`}
                     >
-                      <span className="insight-number">✦</span>
+                      <span className="insight-number">{personaMode === "analyst" ? "✦" : "★"}</span>
                       <p>{recommendation}</p>
                     </div>
                   ))}
@@ -626,13 +838,14 @@ function App() {
         teamNames={teamNames}
         selectedTeam={playerTeam}
         onTeamChange={setPlayerTeam}
+        personaMode={personaMode}
       />
 
       {/* Stage 9: Player rankings & top performers */}
-      <PlayerRankings rankings={rankings} teamNames={teamNames} />
+      <PlayerRankings rankings={rankings} teamNames={teamNames} personaMode={personaMode} />
 
       {/* Stage 9: Head-to-head player comparison */}
-      <PlayerComparison players={players} />
+      <PlayerComparison players={players} personaMode={personaMode} />
 
       {/* Match event log */}
       <section className="section">
@@ -710,6 +923,8 @@ function StatCard({
   homeTeam = "Home",
   awayTeam = "Away",
   suffix = "",
+  fanExplanation = "",
+  personaMode = "analyst",
 }) {
   const total = Number(home) + Number(away);
   const homeShare = total ? (Number(home) / total) * 100 : 50;
@@ -717,6 +932,9 @@ function StatCard({
   return (
     <article className="panel stat-card">
       <p>{title}</p>
+      {personaMode === "fan" && fanExplanation && (
+        <span className="fan-stat-tip">{fanExplanation}</span>
+      )}
 
       <div className="stat-values">
         <strong>
@@ -932,7 +1150,13 @@ function VisualAnalytics({ events, teamAnalytics }) {
   );
 }
 
-function PlayerAnalytics({ players, teamNames, selectedTeam, onTeamChange }) {
+function PlayerAnalytics({
+  players,
+  teamNames,
+  selectedTeam,
+  onTeamChange,
+  personaMode = "analyst",
+}) {
   const filteredPlayers = players.filter((p) => {
     return selectedTeam === "All" || p.team === selectedTeam;
   });
@@ -941,8 +1165,12 @@ function PlayerAnalytics({ players, teamNames, selectedTeam, onTeamChange }) {
     <section className="section" id="player-analytics">
       <div className="section-heading event-heading">
         <div>
-          <p className="eyebrow">INDIVIDUAL METRICS</p>
-          <h2>Player performance analytics</h2>
+          <p className="eyebrow">
+            {personaMode === "analyst" ? "INDIVIDUAL METRICS" : "MATCH HEROES & KEY PLAYERS"}
+          </p>
+          <h2>
+            {personaMode === "analyst" ? "Player performance analytics" : "Player spotlight"}
+          </h2>
         </div>
         <select
           aria-label="Filter players by team"
@@ -962,6 +1190,82 @@ function PlayerAnalytics({ players, teamNames, selectedTeam, onTeamChange }) {
         ) : (
           filteredPlayers.map((player) => {
             const isCity = player.team === "Manchester City";
+
+            if (personaMode === "fan") {
+              const roleBadge = player.goals > 0
+                ? { label: "🏆 Goal Decider", className: "role-decider" }
+                : player.shots >= 2
+                  ? { label: "🎯 Attack Catalyst", className: "role-threat" }
+                  : player.passes_completed >= 2
+                    ? { label: "✨ Midfield Engine", className: "role-distributor" }
+                    : { label: "⚽ Key Contributor", className: "role-contributor" };
+
+              return (
+                <article className="panel player-card" key={player.player}>
+                  <div className="player-card-header">
+                    <div>
+                      <h3 className="player-name">{player.player}</h3>
+                      <span className={`player-team-pill ${isCity ? "team-city" : "team-arsenal"}`}>
+                        {player.team}
+                      </span>
+                      <span className={`fan-role-badge ${roleBadge.className}`}>
+                        {roleBadge.label}
+                      </span>
+                    </div>
+                    <span className="player-events-badge">
+                      {player.total_events} {player.total_events === 1 ? "moment" : "moments"}
+                    </span>
+                  </div>
+
+                  <div className="player-stats-grid">
+                    <div className="player-stat-box">
+                      <span className="stat-label">Goals</span>
+                      <strong className="stat-value highlight-green">{player.goals}</strong>
+                    </div>
+                    <div className="player-stat-box">
+                      <span className="stat-label">Shots on Target</span>
+                      <strong className="stat-value">
+                        {player.shots_on_target} <span className="stat-sub">({player.shots} total)</span>
+                      </strong>
+                    </div>
+                    <div className="player-stat-box">
+                      <span className="stat-label">Passes Completed</span>
+                      <strong className="stat-value">
+                        {player.passes_completed}
+                      </strong>
+                    </div>
+                    <div className="player-stat-box">
+                      <span className="stat-label">Passing Accuracy</span>
+                      <strong className="stat-value">
+                        {player.pass_accuracy_percent !== null
+                          ? `${player.pass_accuracy_percent}%`
+                          : "No passes"}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {player.pass_accuracy_percent !== null && (
+                    <div className="progress-track" style={{ marginTop: "12px" }}>
+                      <div
+                        className="progress-fill"
+                        style={{ width: `${player.pass_accuracy_percent}%` }}
+                      />
+                    </div>
+                  )}
+
+                  <div className="fan-player-note">
+                    {player.goals > 0
+                      ? "Delivered the crucial finishing touch to score for their side."
+                      : player.shots_on_target > 0
+                        ? "Forced the goalkeeper into action with dangerous attempts on goal."
+                        : (player.pass_accuracy_percent ?? 0) >= 80
+                          ? "Tidy and composed in possession, linking play smoothly."
+                          : "Worked hard to support team structure and defensive shape."}
+                  </div>
+                </article>
+              );
+            }
+
             return (
               <article className="panel player-card" key={player.player}>
                 <div className="player-card-header">
@@ -1030,7 +1334,7 @@ function PlayerAnalytics({ players, teamNames, selectedTeam, onTeamChange }) {
   );
 }
 
-function PlayerRankings({ rankings, teamNames = [] }) {
+function PlayerRankings({ rankings, teamNames = [], personaMode = "analyst" }) {
   const [rankingTeam, setRankingTeam] = useState("All");
 
   if (!rankings) {
@@ -1053,8 +1357,12 @@ function PlayerRankings({ rankings, teamNames = [] }) {
     <section className="section" id="player-rankings">
       <div className="section-heading event-heading">
         <div>
-          <p className="eyebrow">LEADERBOARDS & RANKINGS</p>
-          <h2>Top performers</h2>
+          <p className="eyebrow">
+            {personaMode === "analyst" ? "LEADERBOARDS & RANKINGS" : "MATCH LEADERS"}
+          </p>
+          <h2>
+            {personaMode === "analyst" ? "Top performers" : "Who stepped up"}
+          </h2>
         </div>
         <select
           aria-label="Filter rankings by team"
@@ -1071,9 +1379,11 @@ function PlayerRankings({ rankings, teamNames = [] }) {
       <div className="rankings-grid">
         {/* Top Goalscorers */}
         <article className="panel ranking-card">
-          <h3>⚽ Top Goalscorers</h3>
+          <h3>{personaMode === "analyst" ? "⚽ Top Goalscorers" : "🏆 Match Deciders"}</h3>
           <span className="criteria-badge" title={criteria?.goals}>
-            Criteria: Most goals (tie-breaker: conversion %)
+            {personaMode === "analyst"
+              ? "Criteria: Most goals (tie-breaker: conversion %)"
+              : "Ranked by goals scored"}
           </span>
 
           {filteredScorers.length === 0 ? (
@@ -1108,9 +1418,11 @@ function PlayerRankings({ rankings, teamNames = [] }) {
 
         {/* Top Shooters */}
         <article className="panel ranking-card">
-          <h3>🎯 Shot Threats</h3>
+          <h3>{personaMode === "analyst" ? "🎯 Shot Threats" : "🎯 Attack Catalysts"}</h3>
           <span className="criteria-badge" title={criteria?.shots}>
-            Criteria: Most shots (tie-breaker: on target)
+            {personaMode === "analyst"
+              ? "Criteria: Most shots (tie-breaker: on target)"
+              : "Ranked by shots on target"}
           </span>
 
           {filteredShooters.length === 0 ? (
@@ -1145,9 +1457,11 @@ function PlayerRankings({ rankings, teamNames = [] }) {
 
         {/* Top Pass Completers */}
         <article className="panel ranking-card">
-          <h3>↗ Completed Passes</h3>
+          <h3>{personaMode === "analyst" ? "↗ Completed Passes" : "✨ Pass Masters"}</h3>
           <span className="criteria-badge" title={criteria?.passes}>
-            Criteria: Most passes (tie-breaker: accuracy %)
+            {personaMode === "analyst"
+              ? "Criteria: Most passes (tie-breaker: accuracy %)"
+              : "Ranked by completed passes"}
           </span>
 
           {filteredPassers.length === 0 ? (
@@ -1188,7 +1502,7 @@ function PlayerRankings({ rankings, teamNames = [] }) {
   );
 }
 
-function PlayerComparison({ players }) {
+function PlayerComparison({ players, personaMode = "analyst" }) {
   const playerNames = players.map((p) => p.player);
   const [selectedP1, setSelectedP1] = useState("");
   const [selectedP2, setSelectedP2] = useState("");
@@ -1217,8 +1531,12 @@ function PlayerComparison({ players }) {
     <section className="section" id="player-comparison">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">HEAD-TO-HEAD</p>
-          <h2>Player comparison</h2>
+          <p className="eyebrow">
+            {personaMode === "analyst" ? "HEAD-TO-HEAD" : "SUPPORTER COMPARISON"}
+          </p>
+          <h2>
+            {personaMode === "analyst" ? "Player comparison" : "Head-to-head showdown"}
+          </h2>
         </div>
         <span className="ai-tag">✦ SAMPLE COMPARISON</span>
       </div>
@@ -1337,6 +1655,21 @@ function PlayerComparison({ players }) {
               </div>
             </div>
 
+            {personaMode === "fan" && (
+              <div className="fan-verdict-box">
+                <h4>🎉 Fan Verdict: {p1.player} vs {p2.player}</h4>
+                <p>
+                  {p1.goals > p2.goals
+                    ? `${p1.player} had the decisive edge on the scoresheet with ${p1.goals} goal(s), proving to be the bigger scoring threat than ${p2.player}.`
+                    : p2.goals > p1.goals
+                      ? `${p2.player} made the key breakthrough with ${p2.goals} goal(s), carrying a more direct finishing impact than ${p1.player}.`
+                      : p1.goals > 0
+                        ? `Both ${p1.player} and ${p2.player} were clinical for their teams, scoring ${p1.goals} goal(s) each in their key opportunities.`
+                        : `${p1.player} registered ${p1.shots} shot(s) and ${p1.passes_completed} completed pass(es), while ${p2.player} recorded ${p2.shots} shot(s) and ${p2.passes_completed} completed pass(es) in this match phase.`}
+                </p>
+              </div>
+            )}
+
             <div className="comparison-observations">
               <h4>Sample Observations</h4>
               <ul>
@@ -1381,6 +1714,7 @@ function FilterControlBar({
   onEndMinuteChange,
   totalCount,
   filteredCount,
+  personaMode = "analyst",
   onReset,
 }) {
   const isFiltered =
@@ -1411,6 +1745,15 @@ function FilterControlBar({
             </button>
           )}
         </div>
+
+        {personaMode === "fan" && (
+          <div className="fan-tip-banner">
+            <span>💡</span>
+            <span>
+              Supporter Tip: Choose any player or event type to follow their exact moments on the timeline!
+            </span>
+          </div>
+        )}
 
         <div className="filter-grid">
           {/* Team Filter */}

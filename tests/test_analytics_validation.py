@@ -84,6 +84,23 @@ class TestAnalyticsMathValidation(unittest.TestCase):
         self.assertEqual(comp["player1"]["player"], "Erling Haaland")
         self.assertEqual(comp["player2"]["player"], "Bukayo Saka")
 
+    def test_persona_data_integrity(self):
+        """Verifies underlying data consistency for both Analyst and Casual Fan representations."""
+        for match_id in [1, 2]:
+            players = calculate_player_analytics(match_id=match_id)["players"]
+            self.assertGreater(len(players), 0, f"Match {match_id} must have players")
+            for p in players:
+                # Math invariant: goals cannot exceed shots
+                self.assertLessEqual(p["goals"], p["shots"], f"Player {p['player']} goals > shots")
+                # Shots on target cannot exceed shots
+                self.assertLessEqual(p["shots_on_target"], p["shots"], f"Player {p['player']} SOT > shots")
+                # Passes completed cannot exceed passes attempted
+                self.assertLessEqual(p["passes_completed"], p["passes_attempted"], f"Player {p['player']} completed > attempted")
+                # Accuracy must be within 0-100 if defined
+                if p["pass_accuracy_percent"] is not None:
+                    self.assertGreaterEqual(p["pass_accuracy_percent"], 0.0)
+                    self.assertLessEqual(p["pass_accuracy_percent"], 100.0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,17 +14,20 @@ Built for the **Inside the Game: Developer Hackathon** presented by **Microsoft 
    - **Match 1 (Demonstration Showcase):** Manchester City 2 – 1 Arsenal (*Fictional sample events for baseline testing and rule calibration*).
    - **Match 2 (Illustrative Premier League Record):** Arsenal 1 – 0 Manchester City (*Gameweek 8, 8 October 2023 at Emirates Stadium; verified official box score with illustrative key-event sample*).
 2. **Dynamic Dataset Switcher:** One-click toggle between demonstration showcase and real-world match record with distinct visual badges (`DEMO DATA` vs `ILLUSTRATIVE REAL RECORD`).
-3. **Match Centre & Scoreboard:** Official scores, possession share, total shots, shots on target, and completed pass tracking.
-4. **Automated Match Insights:** Deterministic, rule-based observations highlighting possession dominance, attacking efficiency, and conversion margins.
-5. **Visual Match Analytics:**
+3. **Audience Persona Switcher (Analyst Mode vs Casual Fan Mode):** Seamless one-click toggle in top navigation:
+   - **Analyst Mode:** Detailed telemetry, tactical coaching recommendations, pass accuracy/shot conversion ratios, player leaderboards with tie-breaker criteria, and raw event comparisons.
+   - **Casual Fan Mode:** Plain-English storytelling, 1-minute match narrative cards, "What Went Well" coaching summaries, simplified player spotlight badges (Goal Decider, Attack Catalyst, Midfield Engine), and supporter head-to-head verdicts.
+4. **Match Centre & Scoreboard:** Official scores, possession share, total shots, shots on target, and completed pass tracking.
+5. **Automated Match Insights:** Deterministic, rule-based observations highlighting possession dominance, attacking efficiency, and conversion margins.
+6. **Visual Match Analytics:**
    - Interactive **Shot Timeline** (0′ to 90′) with team color-coding and goal markers.
    - **Team Performance Comparison** bars for shots, shots on target, and goals.
    - **Passing Accuracy** visual tracking with progress fills.
-6. **Tactical Intelligence Engine:** Automated diagnosis of attacking volume and ball circulation safety with actionable coaching recommendations.
-7. **Player Performance Analytics:** Individual statistics for passes attempted/completed, pass accuracy percentage (with zero-division protection when no passes are attempted), total shots, shots on target, goals, and conversion percentage.
-8. **Player Rankings & Leaderboards:** Leaderboards for Top Goalscorers, Shot Threats, and Pass Completers with transparent tie-breaker criteria and team filter controls.
-9. **Head-to-Head Player Comparison:** Interactive tool comparing any two players side-by-side with automated observation highlights.
-10. **Interactive Multi-Factor Filters:** Live filtering by Team, Player, Event Type (Passes/Shots), and Match Minute range (0′–90′), updating charts, timeline, and event logs in real time.
+7. **Tactical Intelligence Engine:** Automated diagnosis of attacking volume and ball circulation safety with actionable coaching recommendations.
+8. **Player Performance Analytics:** Individual statistics for passes attempted/completed, pass accuracy percentage (with zero-division protection when no passes are attempted), total shots, shots on target, goals, and conversion percentage.
+9. **Player Rankings & Leaderboards:** Leaderboards for Top Goalscorers, Shot Threats, and Pass Completers with transparent tie-breaker criteria and team filter controls.
+10. **Head-to-Head Player Comparison:** Interactive tool comparing any two players side-by-side with automated observation highlights.
+11. **Interactive Multi-Factor Filters:** Live filtering by Team, Player, Event Type (Passes/Shots), and Match Minute range (0′–90′), updating charts, timeline, and event logs in real time.
 
 ---
 
@@ -88,7 +91,7 @@ Open your browser to:
 ## 🧪 Testing and Verification
 
 ### Backend Automated Test Suite
-Run the 17 automated tests covering endpoints, analytics calculations, zero-division guards, rankings, and filters:
+Run the 18 automated tests covering endpoints, analytics calculations, zero-division guards, rankings, persona data integrity, and filters:
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v

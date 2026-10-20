@@ -12,7 +12,7 @@
 | Requirement | Official Rule | MatchMind AI Status | Notes |
 | :--- | :--- | :--- | :--- |
 | **New Project** | Must be created within hackathon window | ✅ **Compliant** | Repository created October 2026. |
-| **Working Application** | Must install, run, and function as demonstrated | ✅ **Compliant** | Verified with 17/17 passing tests, clean build in 204ms. |
+| **Working Application** | Must install, run, and function as demonstrated | ✅ **Compliant** | Verified with 18/18 passing tests, clean build in ~240ms. |
 | **Tech Focus** | Football data intelligence & explainability | ✅ **Compliant** | Turns synthetic and real match events into explainable tactical & player intelligence. |
 | **Third-Party Data & Licenses** | Must comply with open licenses | ✅ **Compliant** | OpenFootball (CC0) & StatsBomb standards (CC BY 4.0). Verified zero cost. |
 | **Public GitHub Repo** | Link to public repository with clear `README.md` | ✅ **Ready** | Public repo at `https://github.com/240009001kl/matchmind-ai`. |
@@ -44,18 +44,20 @@ and Match 2 — an authentic Premier League fixture: Arsenal 1-0 Manchester City
 Notice how our UI explicitly labels verified official box-score stats from illustrative event samples, 
 maintaining absolute data integrity."
 
-[0:45 - 1:10] TACTICAL & VISUAL INTELLIGENCE (Screen: Scroll down to Shot Timeline & Tactical Panel)
-"Our interactive Shot Timeline maps attacking sequences from minute 0 to 90 with goal markers. 
-Below it, our rule-based Tactical Intelligence Engine diagnoses team finishing and passing safety, 
-generating actionable tactical reports and recommendations without hallucination."
+[0:45 - 1:15] PERSONA EXPERIENCE & TACTICAL INTELLIGENCE (Screen: Click 'Casual Fan' toggle in topbar, then 'Analyst')
+"Crucially, MatchMind AI personalizes the experience with a topbar Persona Switcher.
+In Analyst Mode, coaches and analysts get full telemetry, passing matrices, and tactical recommendations.
+With one click into Casual Fan Mode, the platform instantly translates data into plain-English match narratives,
+hero moments, 'What Went Well' coach summaries, and simplified player spotlight badges without changing the verified facts.
+Below, our interactive Shot Timeline maps attacking sequences from minute 0 to 90."
 
-[1:10 - 1:30] PLAYER PERFORMANCE & HEAD-TO-HEAD (Screen: Player Analytics & Comparison Tool)
-"At the player level, MatchMind AI tracks passes completed, pass accuracy, shots, and conversion. 
+[1:15 - 1:35] PLAYER PERFORMANCE & HEAD-TO-HEAD (Screen: Player Analytics & Comparison Tool)
+"At the player level, MatchMind AI tracks passes completed, accuracy, shots, and conversion. 
 Our Leaderboards rank top goalscorers, shot threats, and pass completers with transparent tie-breaker criteria. 
 With our Head-to-Head Comparison tool, we can select any two players to compare key metrics side-by-side 
-with automated observations."
+with automated observations and fan verdicts."
 
-[1:30 - 1:45] INTERACTIVE FILTERS & CALL TO ACTION (Screen: Adjust Minute Slider and Team Filter, then click Reset)
+[1:35 - 1:50] INTERACTIVE FILTERS & CALL TO ACTION (Screen: Adjust Minute Slider and Team Filter, then click Reset)
 "Finally, our multi-factor filter lets users filter by team, player, event type, and minute range — 
 dynamically updating the timeline, charts, and event log in real time. 
 MatchMind AI: See beyond the score."
@@ -106,3 +108,4 @@ Perform these steps before submitting on the hackathon portal:
   - **Repository URL:** `https://github.com/240009001kl/matchmind-ai`
   - **Demo Video URL:** *(Your YouTube link)*
   - **Technology Tags:** Python, FastAPI, React, Vite, pandas, Football Analytics.
+
