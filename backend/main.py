@@ -121,6 +121,8 @@ def get_analytics(match_id: int):
 def get_match_events(
     match_id: int,
     team: str | None = None,
+    player: str | None = None,
+    event_type: str | None = None,
     start_minute: int = 0,
     end_minute: int = 90
 ):
@@ -142,6 +144,8 @@ def get_match_events(
 
     return filter_events(
         team=team,
+        player=player,
+        event_type=event_type,
         start_minute=start_minute,
         end_minute=end_minute
     )

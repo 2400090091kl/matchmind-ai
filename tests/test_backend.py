@@ -68,6 +68,27 @@ class TestMatchMindBackend(unittest.TestCase):
         early_events = get_match_events(1, start_minute=0, end_minute=10)
         self.assertEqual(early_events["count"], 3)
 
+        # Stage 10: Event type filtering
+        shot_events = get_match_events(1, event_type="shot")
+        self.assertEqual(shot_events["count"], 5)
+        for ev in shot_events["events"]:
+            self.assertEqual(ev["type"], "shot")
+
+        pass_events = get_match_events(1, event_type="pass")
+        self.assertEqual(pass_events["count"], 5)
+        for ev in pass_events["events"]:
+            self.assertEqual(ev["type"], "pass")
+
+        # Stage 10: Player filtering
+        saka_events = get_match_events(1, player="Bukayo Saka")
+        self.assertEqual(saka_events["count"], 2)
+        for ev in saka_events["events"]:
+            self.assertEqual(ev["player"], "Bukayo Saka")
+
+        # Stage 10: Combined filtering
+        combined = get_match_events(1, team="Arsenal", event_type="shot", start_minute=10, end_minute=25)
+        self.assertEqual(combined["count"], 2)
+
         with self.assertRaises(HTTPException):
             get_match_events(1, start_minute=50, end_minute=20)
 

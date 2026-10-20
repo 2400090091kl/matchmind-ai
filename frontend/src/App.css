@@ -942,3 +942,150 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Stage 10: Interactive filter panel */
+.filter-panel {
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  border: 1px solid #2a3d30;
+  background: linear-gradient(145deg, #141f17, #0f1612);
+}
+
+.filter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.filter-heading h3 {
+  margin: 0;
+  font: 600 16px "Space Grotesk", sans-serif;
+  color: #edf4eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-summary-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b6f36b;
+  background: #192b1b;
+  border: 1px solid #325036;
+  border-radius: 6px;
+  padding: 5px 10px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #8fa192;
+  text-transform: uppercase;
+}
+
+.filter-group select,
+.filter-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #354638;
+  border-radius: 8px;
+  background: #18211a;
+  color: #e7eee5;
+  font-size: 12px;
+  outline: none;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  border-color: #b6f36b;
+}
+
+.filter-minute-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-minute-range input {
+  width: 60px;
+  text-align: center;
+}
+
+.filter-minute-range span {
+  color: #79897c;
+  font-size: 11px;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #233125;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.filter-reset-btn {
+  padding: 7px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #d1ded2;
+  background: #1a251c;
+  border: 1px solid #314434;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-reset-btn:hover {
+  background: #253828;
+  color: #b6f36b;
+  border-color: #4b6a4f;
+}
+
+.filter-active-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-tag-chip {
+  font-size: 10px;
+  background: #141c16;
+  border: 1px solid #263829;
+  color: #9eb1a1;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+@media (max-width: 900px) {
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+}

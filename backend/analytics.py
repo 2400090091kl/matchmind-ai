@@ -102,13 +102,30 @@ def calculate_analytics():
     }
 
 
-def filter_events(team=None, start_minute=0, end_minute=90):
+def filter_events(
+    team=None,
+    player=None,
+    event_type=None,
+    start_minute=0,
+    end_minute=90
+):
     filtered = [
         event for event in EVENTS
         if start_minute <= event["minute"] <= end_minute
         and (
             team is None
+            or team.lower() == "all"
             or event["team"].lower() == team.lower()
+        )
+        and (
+            player is None
+            or player.lower() == "all"
+            or event["player"].lower() == player.lower()
+        )
+        and (
+            event_type is None
+            or event_type.lower() == "all"
+            or event["type"].lower() == event_type.lower()
         )
     ]
 
@@ -116,6 +133,8 @@ def filter_events(team=None, start_minute=0, end_minute=90):
         "count": len(filtered),
         "filters": {
             "team": team,
+            "player": player,
+            "event_type": event_type,
             "start_minute": start_minute,
             "end_minute": end_minute
         },

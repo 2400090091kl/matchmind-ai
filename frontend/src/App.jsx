@@ -21,6 +21,12 @@ function App() {
   const [playerTeam, setPlayerTeam] = useState("All");
   const [rankings, setRankings] = useState(null);
 
+  // Stage 10: Interactive filters
+  const [filterPlayer, setFilterPlayer] = useState("All");
+  const [filterEventType, setFilterEventType] = useState("All");
+  const [startMinute, setStartMinute] = useState(0);
+  const [endMinute, setEndMinute] = useState(90);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -105,9 +111,17 @@ function App() {
     ? Object.keys(analytics.analytics)
     : [];
 
-  const visibleEvents = events.filter((event) => {
-    return team === "All" || event.team === team;
+  const allPlayerNames = Array.from(new Set(events.map((e) => e.player))).sort();
+
+  const filteredEvents = events.filter((event) => {
+    const matchesTeam = team === "All" || event.team === team;
+    const matchesPlayer = filterPlayer === "All" || event.player === filterPlayer;
+    const matchesType = filterEventType === "All" || event.type === filterEventType;
+    const matchesMinute = event.minute >= startMinute && event.minute <= endMinute;
+    return matchesTeam && matchesPlayer && matchesType && matchesMinute;
   });
+
+  const visibleEvents = filteredEvents;
 
   if (loading) {
     return (
@@ -346,9 +360,34 @@ function App() {
         </p>
       </section>
 
-      {/* Visual match analytics */}
+      {/* Stage 10: Interactive filter controls */}
+      <FilterControlBar
+        team={team}
+        onTeamChange={setTeam}
+        teamNames={teamNames}
+        player={filterPlayer}
+        onPlayerChange={setFilterPlayer}
+        playerNames={allPlayerNames}
+        eventType={filterEventType}
+        onEventTypeChange={setFilterEventType}
+        startMinute={startMinute}
+        onStartMinuteChange={setStartMinute}
+        endMinute={endMinute}
+        onEndMinuteChange={setEndMinute}
+        totalCount={events.length}
+        filteredCount={filteredEvents.length}
+        onReset={() => {
+          setTeam("All");
+          setFilterPlayer("All");
+          setFilterEventType("All");
+          setStartMinute(0);
+          setEndMinute(90);
+        }}
+      />
+
+      {/* Visual match analytics with live filtered events */}
       <VisualAnalytics
-        events={events}
+        events={filteredEvents}
         teamAnalytics={analytics.analytics}
       />
 
@@ -1203,6 +1242,151 @@ function PlayerComparison({ players }) {
       <p className="footnote" style={{ marginTop: "14px" }}>
         Comparison Caveat: Head-to-head metrics reflect strictly the 10 recorded sample match events and should not be used to make broad claims about player capability.
       </p>
+    </section>
+  );
+}
+
+function FilterControlBar({
+  team,
+  onTeamChange,
+  teamNames,
+  player,
+  onPlayerChange,
+  playerNames,
+  eventType,
+  onEventTypeChange,
+  startMinute,
+  onStartMinuteChange,
+  endMinute,
+  onEndMinuteChange,
+  totalCount,
+  filteredCount,
+  onReset,
+}) {
+  const isFiltered =
+    team !== "All" ||
+    player !== "All" ||
+    eventType !== "All" ||
+    startMinute !== 0 ||
+    endMinute !== 90;
+
+  return (
+    <section className="section" id="interactive-filters">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">DEEP MATCH EXPLORATION</p>
+          <h2>Interactive match filters</h2>
+        </div>
+        <span className="filter-summary-pill">
+          Showing {filteredCount} of {totalCount} events
+        </span>
+      </div>
+
+      <div className="panel filter-panel">
+        <div className="filter-heading">
+          <h3>⚡ Filter Analytics & Timeline</h3>
+          {isFiltered && (
+            <button className="filter-reset-btn" onClick={onReset}>
+              ↺ Reset All Filters
+            </button>
+          )}
+        </div>
+
+        <div className="filter-grid">
+          {/* Team Filter */}
+          <div className="filter-group">
+            <label htmlFor="filter-team">Team</label>
+            <select
+              id="filter-team"
+              value={team}
+              onChange={(e) => onTeamChange(e.target.value)}
+            >
+              <option value="All">All Teams</option>
+              {teamNames.map((name) => (
+                <option key={`filter-${name}`} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Player Filter */}
+          <div className="filter-group">
+            <label htmlFor="filter-player">Player</label>
+            <select
+              id="filter-player"
+              value={player}
+              onChange={(e) => onPlayerChange(e.target.value)}
+            >
+              <option value="All">All Players</option>
+              {playerNames.map((p) => (
+                <option key={`filter-${p}`} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Event Type Filter */}
+          <div className="filter-group">
+            <label htmlFor="filter-type">Event Type</label>
+            <select
+              id="filter-type"
+              value={eventType}
+              onChange={(e) => onEventTypeChange(e.target.value)}
+            >
+              <option value="All">All Events (Pass & Shot)</option>
+              <option value="shot">Shots Only</option>
+              <option value="pass">Passes Only</option>
+            </select>
+          </div>
+
+          {/* Minute Range Filter */}
+          <div className="filter-group">
+            <label>Minute Range (0′ - 90′)</label>
+            <div className="filter-minute-range">
+              <input
+                type="number"
+                min="0"
+                max={endMinute}
+                value={startMinute}
+                aria-label="Start minute"
+                onChange={(e) => {
+                  const val = Math.max(0, Math.min(Number(e.target.value), endMinute));
+                  onStartMinuteChange(val);
+                }}
+              />
+              <span>to</span>
+              <input
+                type="number"
+                min={startMinute}
+                max="90"
+                value={endMinute}
+                aria-label="End minute"
+                onChange={(e) => {
+                  const val = Math.min(90, Math.max(Number(e.target.value), startMinute));
+                  onEndMinuteChange(val);
+                }}
+              />
+              <span>min</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Active filter summary chips */}
+        <div className="filter-actions">
+          <div className="filter-active-tags">
+            <span className="filter-tag-chip">Team: {team}</span>
+            <span className="filter-tag-chip">Player: {player}</span>
+            <span className="filter-tag-chip">Type: {eventType}</span>
+            <span className="filter-tag-chip">Minutes: {startMinute}′ - {endMinute}′</span>
+          </div>
+
+          <span className="footnote">
+            Charts, timeline, and match event log dynamically update with active filters.
+          </span>
+        </div>
+      </div>
     </section>
   );
 }
