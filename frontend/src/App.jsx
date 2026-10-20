@@ -183,7 +183,7 @@ function App() {
           </span>
         </a>
         {match.is_real_data ? (
-          <span className="real-badge">REAL FOOTBALL RECORD</span>
+          <span className="real-badge">ILLUSTRATIVE REAL RECORD</span>
         ) : (
           <span className="demo-badge">DEMO DATA</span>
         )}
@@ -273,7 +273,7 @@ function App() {
           <span>Match ID: {match.match_id} · {match.venue ?? "Venue Demo"}</span>
           <span>
             {match.is_real_data
-              ? "Authentic Match Record · OpenFootball Data Standards"
+              ? "Verified Match Summary (PL Official) · Illustrative Event Sample"
               : "Sample match data · Not live"}
           </span>
         </div>
@@ -286,7 +286,9 @@ function App() {
             <p className="eyebrow">PERFORMANCE OVERVIEW</p>
             <h2>Match statistics</h2>
           </div>
-          <span className="section-note">From sample data</span>
+          <span className="section-note">
+            {match.is_real_data ? "Verified official match statistics" : "From sample demonstration data"}
+          </span>
         </div>
 
         <div className="stat-grid">
@@ -434,7 +436,9 @@ function App() {
         </div>
 
         <p className="footnote">
-          Observations are generated from fictional sample data.
+          {match.is_real_data
+            ? "Observations are generated from verified match stats & illustrative key events."
+            : "Observations are generated from fictional sample data."}
         </p>
       </section>
 
@@ -887,8 +891,9 @@ function VisualAnalytics({ events, teamAnalytics }) {
           ))}
 
           <p className="footnote">
-            These charts use the available fictional event sample,
-            not the separate match scoreboard totals.
+            {match.is_real_data
+              ? "These charts use the illustrative key-event sample, not the full 90-minute box score totals."
+              : "These charts use the available fictional event sample, not the separate match scoreboard totals."}
           </p>
         </article>
       </div>

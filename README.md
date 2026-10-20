@@ -1,38 +1,46 @@
 # ⚽ MatchMind AI
 
-### AI-Powered Football Match Intelligence Platform
+### Explainable Football Match Intelligence Platform
 
-MatchMind AI is an explainable football match intelligence dashboard that transforms football match records and event data into visual analytics, automated tactical recommendations, player-level performance metrics, interactive multi-factor filters, and head-to-head comparisons.
+MatchMind AI transforms raw football match records and event streams into explainable tactical recommendations, player-level performance metrics, interactive multi-factor filters, visual shot timelines, and head-to-head comparisons.
+
+Built for the **Inside the Game: Developer Hackathon** presented by **Microsoft & Premier League**.
 
 ---
 
 ## 🚀 Key Features
 
 1. **Dual Match Dataset Architecture:**
-   - **Match 1 (Demo Showcase):** Manchester City 2 – 1 Arsenal (*Fictional sample events for baseline testing and rule validation*).
+   - **Match 1 (Demonstration Showcase):** Manchester City 2 – 1 Arsenal (*Fictional sample events for baseline testing and rule calibration*).
    - **Match 2 (Illustrative Premier League Record):** Arsenal 1 – 0 Manchester City (*Gameweek 8, 8 October 2023 at Emirates Stadium; verified official box score with illustrative key-event sample*).
 2. **Dynamic Dataset Switcher:** One-click toggle between demonstration showcase and real-world match record with distinct visual badges (`DEMO DATA` vs `ILLUSTRATIVE REAL RECORD`).
 3. **Match Centre & Scoreboard:** Official scores, possession share, total shots, shots on target, and completed pass tracking.
 4. **Automated Match Insights:** Deterministic, rule-based observations highlighting possession dominance, attacking efficiency, and conversion margins.
 5. **Visual Match Analytics:**
-   - Interactive **Shot Timeline** (0′ to 90′) with team color-coding and goal icons.
+   - Interactive **Shot Timeline** (0′ to 90′) with team color-coding and goal markers.
    - **Team Performance Comparison** bars for shots, shots on target, and goals.
-   - **Passing Accuracy** visual tracking.
+   - **Passing Accuracy** visual tracking with progress fills.
 6. **Tactical Intelligence Engine:** Automated diagnosis of attacking volume and ball circulation safety with actionable coaching recommendations.
-7. **Player Performance Analytics:** Individual player statistics for passes attempted/completed, pass accuracy percentage (with zero-division protection when no passes are attempted), total shots, shots on target, goals, and conversion percentage.
+7. **Player Performance Analytics:** Individual statistics for passes attempted/completed, pass accuracy percentage (with zero-division protection when no passes are attempted), total shots, shots on target, goals, and conversion percentage.
 8. **Player Rankings & Leaderboards:** Leaderboards for Top Goalscorers, Shot Threats, and Pass Completers with transparent tie-breaker criteria and team filter controls.
-9. **Head-to-Head Player Comparison:** Interactive comparison tool comparing any two players side-by-side with automated observation highlights.
-10. **Interactive Multi-Factor Match Filters:** Live filtering by Team, Player, Event Type (Passes/Shots), and Match Minute range (0′–90′), updating charts, timeline, and event logs in real time.
+9. **Head-to-Head Player Comparison:** Interactive tool comparing any two players side-by-side with automated observation highlights.
+10. **Interactive Multi-Factor Filters:** Live filtering by Team, Player, Event Type (Passes/Shots), and Match Minute range (0′–90′), updating charts, timeline, and event logs in real time.
 
 ---
 
-## 🛠️ Technology Stack
+## 🏗️ Architecture Overview
 
-- **Frontend:** React 19, Vite, Vanilla CSS (Dark theme with `#b6f36b` green accents)
-- **Backend:** Python FastAPI, Uvicorn
-- **Analytics & Data Processing:** pandas, NumPy
-- **Testing:** Python `unittest` (17 automated tests), Oxlint
-- **Architecture:** Local REST API + Client-side reactive state
+```mermaid
+flowchart LR
+    A["React 19 + Vite Dashboard<br/>(Visuals, Filters, Leaderboards)"] <-->|REST API| B["FastAPI Backend<br/>(Endpoints, CORS, Validation)"]
+    B <-->|Data Engine| C["pandas Analytics Core<br/>(Metrics, Tactical Rules, Slicers)"]
+    C <-->|Datasets| D["Dual Match Data<br/>(Demo Match & PL Record)"]
+```
+
+- **Frontend:** React 19, Vite, Vanilla CSS (Dark theme with `#b6f36b` green accents). Zero external UI framework bloat.
+- **Backend:** Python FastAPI, Uvicorn, Starlette. High-performance asynchronous REST API.
+- **Data Engine:** pandas, NumPy. Vectorized aggregation for passing accuracy, shot conversion, and deterministic tie-breaking.
+- **Architecture Details:** See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for full component breakdown and sequence diagrams.
 
 ---
 
@@ -46,10 +54,10 @@ MatchMind AI is an explainable football match intelligence dashboard that transf
 From the repository root:
 
 ```powershell
-# Activate the existing virtual environment (PowerShell)
+# Activate virtual environment
 .\.venv\Scripts\Activate.ps1
 
-# Start the FastAPI server on port 8000
+# Start FastAPI server on port 8000
 python -m uvicorn backend.main:app --port 8000 --reload
 ```
 
@@ -59,16 +67,16 @@ The API will be available at:
 - **Health Check Endpoint:** `http://127.0.0.1:8000/health`
 
 ### 2. Frontend Setup
-In a second terminal window:
+In a second terminal:
 
 ```powershell
-# Navigate into the frontend directory
+# Navigate into frontend
 cd frontend
 
-# Install dependencies (if not already installed)
+# Install dependencies (if needed)
 npm install
 
-# Start the Vite development server
+# Start Vite development server
 npm run dev
 ```
 
@@ -110,25 +118,11 @@ MatchMind AI operates under a strict **Zero-Cost & Zero-Risk Mandate**:
 
 ---
 
-## 🏆 Hackathon Demo Walkthrough (3-Minute Script)
+## 🏆 Hackathon Submission & Demo
 
-When presenting MatchMind AI to judges or stakeholders:
-
-1. **The Vision (0:00 – 0:30):**
-   - Explain how raw football event streams overwhelm analysts, while commercial platforms cost thousands. MatchMind AI provides explainable, zero-cost match intelligence running locally.
-2. **Dataset Switcher (0:30 – 1:00):**
-   - Toggle between **Match 1 (Demo Data)** and **Match 2 (Illustrative Premier League Record)**.
-   - Show how the scoreboard, venue, and data provenance badges dynamically update.
-3. **Tactical & Visual Analytics (1:00 – 1:45):**
-   - Walk through the **Shot Timeline** (0′ to 90′) and **Team Performance Comparison**.
-   - Show how the rule-based tactical engine diagnoses shot conversion and recommends strategic adjustments.
-4. **Player Analytics & Rankings (1:45 – 2:30):**
-   - Scroll to **Player Performance Analytics** and toggle the team filter to see individual player stats.
-   - Review the **Leaderboards** (Goals, Shots, Completed Passes) with transparent tie-breaker criteria.
-   - Open the **Head-to-Head Comparison** tool, select any two players, and highlight the automated observation statements.
-5. **Interactive Filtering (2:30 – 3:00):**
-   - In the **Interactive Match Filters** panel, select a team (e.g. `Arsenal`), event type (`Shots Only`), and minute range (`10′ to 90′`).
-   - Demonstrate how the shot timeline, event counter, and key event logs update instantly.
-   - Click **↺ Reset All Filters** to showcase quick recovery.
-
-For the full presentation checklist, see [`docs/DEMO_PRESENTATION_GUIDE.md`](docs/DEMO_PRESENTATION_GUIDE.md).
+- **Hackathon:** Inside the Game: Developer Hackathon (Microsoft & Premier League)
+- **Submission Guide:** [`docs/HACKATHON_SUBMISSION_GUIDE.md`](docs/HACKATHON_SUBMISSION_GUIDE.md) — Includes:
+  - Strict **Under-2-Minute Video Recording Script** (< 120s)
+  - 3-Minute Live Presentation & Q&A Script
+  - Devpost / Submission Portal Checklist
+  - Pre-submission git verification
