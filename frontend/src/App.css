@@ -727,3 +727,218 @@ select {
   font-size: 10px;
   color: #7f8e82;
 }
+
+
+/* Stage 9: Player rankings & Comparison */
+.rankings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ranking-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ranking-card h3 {
+  margin: 0 0 6px 0;
+  font: 600 16px "Space Grotesk", sans-serif;
+  color: #edf4eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.criteria-badge {
+  display: inline-block;
+  font-size: 10px;
+  color: #8da090;
+  background: #141c16;
+  border: 1px solid #233126;
+  border-radius: 4px;
+  padding: 4px 7px;
+  margin-bottom: 14px;
+}
+
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #111813;
+  border: 1px solid #1f2b22;
+  border-radius: 8px;
+  gap: 10px;
+}
+
+.ranking-item.top-rank {
+  border-color: #38593a;
+  background: #142218;
+}
+
+.ranking-pos {
+  font: 700 12px "Space Grotesk", sans-serif;
+  color: #b6f36b;
+  width: 20px;
+}
+
+.ranking-player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.ranking-player-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #eef2ed;
+}
+
+.ranking-player-team {
+  font-size: 10px;
+  color: #79897c;
+}
+
+.ranking-stat-val {
+  font: 700 14px "Space Grotesk", sans-serif;
+  color: #b6f36b;
+  text-align: right;
+}
+
+.ranking-stat-sub {
+  font-size: 9px;
+  color: #79897c;
+  display: block;
+}
+
+/* Player comparison tool */
+.comparison-panel {
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.comparison-selectors {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.comparison-select-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.comparison-select-box label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #8da090;
+  text-transform: uppercase;
+}
+
+.comparison-select-box select {
+  padding: 10px 12px;
+  border: 1px solid #354638;
+  border-radius: 8px;
+  background: #18211a;
+  color: #e7eee5;
+  font-size: 13px;
+  outline: none;
+}
+
+.comparison-vs {
+  font: 700 16px "Space Grotesk", sans-serif;
+  color: #657466;
+  padding-top: 18px;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.comparison-card {
+  background: #101613;
+  border: 1px solid #233026;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comparison-metric-title {
+  font-size: 11px;
+  color: #849386;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.comparison-metric-values {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.p1-val, .p2-val {
+  font: 700 18px "Space Grotesk", sans-serif;
+}
+
+.p1-val {
+  color: #8acaff;
+}
+
+.p2-val {
+  color: #ff9ea2;
+}
+
+.val-leader {
+  color: #b6f36b !important;
+  text-shadow: 0 0 10px rgba(182, 243, 107, 0.3);
+}
+
+.comparison-observations {
+  background: #121a14;
+  border-radius: 8px;
+  border: 1px solid #233126;
+  padding: 14px 18px;
+  margin-top: 16px;
+}
+
+.comparison-observations h4 {
+  margin: 0 0 8px 0;
+  font: 600 13px "Space Grotesk", sans-serif;
+  color: #b6f36b;
+}
+
+.comparison-observations ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #c2cfc3;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (max-width: 850px) {
+  .rankings-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -19,6 +19,7 @@ function App() {
 
   const [players, setPlayers] = useState([]);
   const [playerTeam, setPlayerTeam] = useState("All");
+  const [rankings, setRankings] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -35,13 +36,14 @@ function App() {
           fetch(`${API}/api/matches/1/insights`),
           fetch(`${API}/api/matches/1/events`),
           fetch(`${API}/api/matches/1/players`),
+          fetch(`${API}/api/matches/1/player-rankings`),
         ]);
 
         if (responses.some((response) => !response.ok)) {
           throw new Error("Could not load match data.");
         }
 
-        const [matchData, analyticsData, insightsData, eventsData, playersData] =
+        const [matchData, analyticsData, insightsData, eventsData, playersData, rankingsData] =
           await Promise.all(responses.map((response) => response.json()));
 
         setMatch(matchData);
@@ -52,6 +54,7 @@ function App() {
         ]);
         setEvents(eventsData.events);
         setPlayers(playersData.players ?? []);
+        setRankings(rankingsData);
       } catch {
         setError(
           "Unable to connect to the backend. Make sure FastAPI is running on port 8000."
@@ -504,6 +507,12 @@ function App() {
         onTeamChange={setPlayerTeam}
       />
 
+      {/* Stage 9: Player rankings & top performers */}
+      <PlayerRankings rankings={rankings} />
+
+      {/* Stage 9: Head-to-head player comparison */}
+      <PlayerComparison players={players} />
+
       {/* Match event log */}
       <section className="section">
         <div className="section-heading event-heading">
@@ -887,6 +896,312 @@ function PlayerAnalytics({ players, teamNames, selectedTeam, onTeamChange }) {
       </div>
       <p className="footnote" style={{ marginTop: "14px" }}>
         * Pass accuracy is marked N/A where a player attempted zero passes in the sample. Statistics are derived strictly from the recorded event sample.
+      </p>
+    </section>
+  );
+}
+
+function PlayerRankings({ rankings }) {
+  if (!rankings) {
+    return null;
+  }
+
+  const { top_scorers, top_shooters, top_passers, criteria } = rankings;
+
+  return (
+    <section className="section" id="player-rankings">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">LEADERBOARDS & RANKINGS</p>
+          <h2>Top performers</h2>
+        </div>
+        <span className="mini-tag">SAMPLE RANKINGS</span>
+      </div>
+
+      <div className="rankings-grid">
+        {/* Top Goalscorers */}
+        <article className="panel ranking-card">
+          <h3>⚽ Top Goalscorers</h3>
+          <span className="criteria-badge" title={criteria?.goals}>
+            Criteria: Most goals (tie-breaker: conversion %)
+          </span>
+
+          {top_scorers.length === 0 ? (
+            <p className="empty-state">No goals recorded in this sample.</p>
+          ) : (
+            <div className="ranking-list">
+              {top_scorers.map((player, idx) => (
+                <div
+                  className={`ranking-item ${idx === 0 ? "top-rank" : ""}`}
+                  key={player.player}
+                >
+                  <span className="ranking-pos">#{idx + 1}</span>
+                  <div className="ranking-player-info">
+                    <span className="ranking-player-name">{player.player}</span>
+                    <span className="ranking-player-team">{player.team}</span>
+                  </div>
+                  <div>
+                    <span className="ranking-stat-val">
+                      {player.goals} {player.goals === 1 ? "goal" : "goals"}
+                    </span>
+                    <span className="ranking-stat-sub">
+                      {player.shot_conversion_percent}% conv.
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </article>
+
+        {/* Top Shooters */}
+        <article className="panel ranking-card">
+          <h3>🎯 Shot Threats</h3>
+          <span className="criteria-badge" title={criteria?.shots}>
+            Criteria: Most shots (tie-breaker: on target)
+          </span>
+
+          {top_shooters.length === 0 ? (
+            <p className="empty-state">No shot attempts recorded in sample.</p>
+          ) : (
+            <div className="ranking-list">
+              {top_shooters.map((player, idx) => (
+                <div
+                  className={`ranking-item ${idx === 0 ? "top-rank" : ""}`}
+                  key={player.player}
+                >
+                  <span className="ranking-pos">#{idx + 1}</span>
+                  <div className="ranking-player-info">
+                    <span className="ranking-player-name">{player.player}</span>
+                    <span className="ranking-player-team">{player.team}</span>
+                  </div>
+                  <div>
+                    <span className="ranking-stat-val">
+                      {player.shots} {player.shots === 1 ? "shot" : "shots"}
+                    </span>
+                    <span className="ranking-stat-sub">
+                      {player.shots_on_target} on target
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </article>
+
+        {/* Top Pass Completers */}
+        <article className="panel ranking-card">
+          <h3>↗ Completed Passes</h3>
+          <span className="criteria-badge" title={criteria?.passes}>
+            Criteria: Most passes (tie-breaker: accuracy %)
+          </span>
+
+          {top_passers.length === 0 ? (
+            <p className="empty-state">No completed passes recorded in sample.</p>
+          ) : (
+            <div className="ranking-list">
+              {top_passers.map((player, idx) => (
+                <div
+                  className={`ranking-item ${idx === 0 ? "top-rank" : ""}`}
+                  key={player.player}
+                >
+                  <span className="ranking-pos">#{idx + 1}</span>
+                  <div className="ranking-player-info">
+                    <span className="ranking-player-name">{player.player}</span>
+                    <span className="ranking-player-team">{player.team}</span>
+                  </div>
+                  <div>
+                    <span className="ranking-stat-val">
+                      {player.passes_completed} completed
+                    </span>
+                    <span className="ranking-stat-sub">
+                      {player.pass_accuracy_percent}% accuracy
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </article>
+      </div>
+
+      <p className="footnote">
+        Notice: Rankings are strictly limited to the recorded 10-event dataset. They highlight active players in this sample and do not represent full match or season performance.
+      </p>
+    </section>
+  );
+}
+
+function PlayerComparison({ players }) {
+  const playerNames = players.map((p) => p.player);
+  const [player1Name, setPlayer1Name] = useState(
+    playerNames.length > 0 ? playerNames[0] : ""
+  );
+  const [player2Name, setPlayer2Name] = useState(
+    playerNames.length > 1 ? playerNames[1] : ""
+  );
+
+  const p1 = players.find((p) => p.player === player1Name);
+  const p2 = players.find((p) => p.player === player2Name);
+
+  const isSame = player1Name && player2Name && player1Name === player2Name;
+
+  const compareMetric = (val1, val2) => {
+    if (val1 === null || val2 === null) return { p1Lead: false, p2Lead: false };
+    return {
+      p1Lead: val1 > val2,
+      p2Lead: val2 > val1,
+    };
+  };
+
+  return (
+    <section className="section" id="player-comparison">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">HEAD-TO-HEAD</p>
+          <h2>Player comparison</h2>
+        </div>
+        <span className="ai-tag">✦ SAMPLE COMPARISON</span>
+      </div>
+
+      <article className="panel comparison-panel">
+        <div className="comparison-selectors">
+          <div className="comparison-select-box">
+            <label htmlFor="p1-select">Player 1</label>
+            <select
+              id="p1-select"
+              value={player1Name}
+              onChange={(e) => setPlayer1Name(e.target.value)}
+            >
+              {playerNames.map((name) => (
+                <option key={`p1-${name}`} value={name}>
+                  {name} ({players.find((p) => p.player === name)?.team})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <span className="comparison-vs">VS</span>
+
+          <div className="comparison-select-box">
+            <label htmlFor="p2-select">Player 2</label>
+            <select
+              id="p2-select"
+              value={player2Name}
+              onChange={(e) => setPlayer2Name(e.target.value)}
+            >
+              {playerNames.map((name) => (
+                <option key={`p2-${name}`} value={name}>
+                  {name} ({players.find((p) => p.player === name)?.team})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {isSame && (
+          <p className="empty-state">
+            Please select two different players to compare head-to-head metrics.
+          </p>
+        )}
+
+        {!isSame && (!p1 || !p2) && (
+          <p className="empty-state">Insufficient player data to render comparison.</p>
+        )}
+
+        {!isSame && p1 && p2 && (
+          <>
+            <div className="comparison-grid">
+              {/* Goals */}
+              <div className="comparison-card">
+                <span className="comparison-metric-title">Goals Scored</span>
+                <div className="comparison-metric-values">
+                  <span className={`p1-val ${compareMetric(p1.goals, p2.goals).p1Lead ? "val-leader" : ""}`}>
+                    {p1.goals}
+                  </span>
+                  <span className={`p2-val ${compareMetric(p1.goals, p2.goals).p2Lead ? "val-leader" : ""}`}>
+                    {p2.goals}
+                  </span>
+                </div>
+              </div>
+
+              {/* Shots */}
+              <div className="comparison-card">
+                <span className="comparison-metric-title">Shots (Target)</span>
+                <div className="comparison-metric-values">
+                  <span className={`p1-val ${compareMetric(p1.shots, p2.shots).p1Lead ? "val-leader" : ""}`}>
+                    {p1.shots} ({p1.shots_on_target})
+                  </span>
+                  <span className={`p2-val ${compareMetric(p1.shots, p2.shots).p2Lead ? "val-leader" : ""}`}>
+                    {p2.shots} ({p2.shots_on_target})
+                  </span>
+                </div>
+              </div>
+
+              {/* Passes Completed */}
+              <div className="comparison-card">
+                <span className="comparison-metric-title">Passes Completed</span>
+                <div className="comparison-metric-values">
+                  <span className={`p1-val ${compareMetric(p1.passes_completed, p2.passes_completed).p1Lead ? "val-leader" : ""}`}>
+                    {p1.passes_completed} / {p1.passes_attempted}
+                  </span>
+                  <span className={`p2-val ${compareMetric(p1.passes_completed, p2.passes_completed).p2Lead ? "val-leader" : ""}`}>
+                    {p2.passes_completed} / {p2.passes_attempted}
+                  </span>
+                </div>
+              </div>
+
+              {/* Pass Accuracy */}
+              <div className="comparison-card">
+                <span className="comparison-metric-title">Pass Accuracy</span>
+                <div className="comparison-metric-values">
+                  <span className={`p1-val ${compareMetric(p1.pass_accuracy_percent, p2.pass_accuracy_percent).p1Lead ? "val-leader" : ""}`}>
+                    {p1.pass_accuracy_percent !== null ? `${p1.pass_accuracy_percent}%` : "N/A"}
+                  </span>
+                  <span className={`p2-val ${compareMetric(p1.pass_accuracy_percent, p2.pass_accuracy_percent).p2Lead ? "val-leader" : ""}`}>
+                    {p2.pass_accuracy_percent !== null ? `${p2.pass_accuracy_percent}%` : "N/A"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Total Events */}
+              <div className="comparison-card">
+                <span className="comparison-metric-title">Total Sample Events</span>
+                <div className="comparison-metric-values">
+                  <span className={`p1-val ${compareMetric(p1.total_events, p2.total_events).p1Lead ? "val-leader" : ""}`}>
+                    {p1.total_events}
+                  </span>
+                  <span className={`p2-val ${compareMetric(p1.total_events, p2.total_events).p2Lead ? "val-leader" : ""}`}>
+                    {p2.total_events}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="comparison-observations">
+              <h4>Sample Observations</h4>
+              <ul>
+                <li>
+                  {p1.goals > p2.goals
+                    ? `${p1.player} scored more goals in this event sample (${p1.goals} vs ${p2.goals}).`
+                    : p2.goals > p1.goals
+                      ? `${p2.player} scored more goals in this event sample (${p2.goals} vs ${p1.goals}).`
+                      : `Both players scored equal goals (${p1.goals}) in this event sample.`}
+                </li>
+                <li>
+                  {p1.passes_completed > p2.passes_completed
+                    ? `${p1.player} completed more passes (${p1.passes_completed} vs ${p2.passes_completed}).`
+                    : p2.passes_completed > p1.passes_completed
+                      ? `${p2.player} completed more passes (${p2.passes_completed} vs ${p1.passes_completed}).`
+                      : `Both players completed ${p1.passes_completed} pass(es).`}
+                </li>
+              </ul>
+            </div>
+          </>
+        )}
+      </article>
+      <p className="footnote" style={{ marginTop: "14px" }}>
+        Comparison Caveat: Head-to-head metrics reflect strictly the 10 recorded sample match events and should not be used to make broad claims about player capability.
       </p>
     </section>
   );

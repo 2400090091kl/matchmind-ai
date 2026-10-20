@@ -9,12 +9,16 @@ from backend.main import (
     get_analytics,
     get_match_events,
     get_match_players,
+    get_match_player_rankings,
+    get_match_player_comparison,
     get_tactical_analysis,
 )
 from backend.analytics import (
     calculate_analytics,
     filter_events,
     calculate_player_analytics,
+    get_player_rankings,
+    compare_players,
 )
 from fastapi import HTTPException
 
@@ -86,6 +90,41 @@ class TestMatchMindBackend(unittest.TestCase):
 
         with self.assertRaises(HTTPException):
             get_match_players(999)
+
+    def test_player_rankings(self):
+        rankings = get_match_player_rankings(1)
+        self.assertIn("top_scorers", rankings)
+        self.assertIn("top_shooters", rankings)
+        self.assertIn("top_passers", rankings)
+        self.assertIn("criteria", rankings)
+
+        # Two players scored in sample: Bukayo Saka and Erling Haaland
+        self.assertEqual(len(rankings["top_scorers"]), 2)
+        scorers = [p["player"] for p in rankings["top_scorers"]]
+        self.assertIn("Erling Haaland", scorers)
+        self.assertIn("Bukayo Saka", scorers)
+
+        # Rankings by team
+        city_rankings = get_match_player_rankings(1, team="Manchester City")
+        self.assertEqual(len(city_rankings["top_scorers"]), 1)
+        self.assertEqual(city_rankings["top_scorers"][0]["player"], "Erling Haaland")
+
+        with self.assertRaises(HTTPException):
+            get_match_player_rankings(999)
+
+    def test_player_comparison(self):
+        comp = get_match_player_comparison(1, player1="Erling Haaland", player2="Bukayo Saka")
+        self.assertEqual(comp["player1"]["player"], "Erling Haaland")
+        self.assertEqual(comp["player2"]["player"], "Bukayo Saka")
+        self.assertGreaterEqual(len(comp["observations"]), 1)
+
+        # Comparing same player should fail
+        with self.assertRaises(HTTPException):
+            get_match_player_comparison(1, player1="Erling Haaland", player2="Erling Haaland")
+
+        # Unknown player should fail
+        with self.assertRaises(HTTPException):
+            get_match_player_comparison(1, player1="Unknown Player", player2="Bukayo Saka")
 
     def test_tactical_analysis(self):
         tactical = get_tactical_analysis(1)

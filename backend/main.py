@@ -5,6 +5,8 @@ from backend.analytics import (
     calculate_analytics,
     filter_events,
     calculate_player_analytics,
+    get_player_rankings,
+    compare_players,
 )
 
 app = FastAPI(
@@ -158,6 +160,39 @@ def get_match_players(
         )
 
     return calculate_player_analytics(team=team, player=player)
+
+
+@app.get("/api/matches/{match_id}/player-rankings")
+def get_match_player_rankings(
+    match_id: int,
+    team: str | None = None
+):
+    if match_id != MATCH["match_id"]:
+        raise HTTPException(
+            status_code=404,
+            detail="Match not found"
+        )
+    return get_player_rankings(team=team)
+
+
+@app.get("/api/matches/{match_id}/player-comparison")
+def get_match_player_comparison(
+    match_id: int,
+    player1: str = "",
+    player2: str = ""
+):
+    if match_id != MATCH["match_id"]:
+        raise HTTPException(
+            status_code=404,
+            detail="Match not found"
+        )
+    result = compare_players(player1=player1, player2=player2)
+    if "error" in result and result.get("player1") is None:
+        raise HTTPException(
+            status_code=400,
+            detail=result["error"]
+        )
+    return result
 
 
 @app.get("/api/matches/{match_id}/tactical-analysis")
