@@ -2,36 +2,107 @@
 
 ### AI-Powered Football Match Intelligence Platform
 
-MatchMind AI transforms synthetic football match events into real-time insights, tactical analysis, contextual commentary, and automated match recaps.
+MatchMind AI transforms football match and event data into visual analytics, automated tactical recommendations, player-level performance metrics, interactive multi-factor filters, and head-to-head comparisons.
+
+---
 
 ## 🚀 Key Features
 
-- **Live Match Dashboard** — View match events and statistics.
-- **AI Commentary** — Generate contextual commentary from match data.
-- **Tactical Analysis** — Identify patterns and explain important match moments.
-- **Match Statistics** — Track shots, passes, possession, tackles, and goals.
-- **Automated Recaps** — Generate concise summaries of match events.
-- **Fan Mode** — Provide personalized and multilingual match insights.
+1. **Dual Match Dataset Architecture:**
+   - **Demo Match 1:** Manchester City 2 – 1 Arsenal (*Fictional sample events for baseline testing*).
+   - **Real Match 2:** Arsenal 1 – 0 Manchester City (*Authentic 2023/24 Premier League record sourced from OpenFootball / StatsBomb open data standards*).
+2. **Match Centre & Scoreboard:** Dynamic score display, possession, shot totals, shots on target, and completed passes.
+3. **Automated Match Insights:** Rule-based automated observations highlighting possession balance, shot dominance, and conversion efficiency.
+4. **Visual Analytics:**
+   - Interactive **Shot Timeline** spanning 0′ to 90′ with goal indicators.
+   - **Team Performance Comparison** bar graphs for shots, target accuracy, and goals.
+   - **Passing Accuracy** progress tracks.
+5. **Tactical Intelligence Engine:** Automated tactical reports diagnosing attacking frequency and passing safety with actionable recommendations.
+6. **Player Performance Analytics:** Individual statistics for passes attempted/completed, pass accuracy, shots, shots on target, goals, and conversion percentage.
+7. **Player Rankings & Leaderboards:** Top performers ranked by goals, shot threats, and completed passes with transparent ranking criteria and tie-breakers.
+8. **Head-to-Head Player Comparison:** Interactive tool comparing any two players side-by-side with automatic observation highlights.
+9. **Interactive Multi-Factor Filtering:** Live filtering by Team, Player, Event Type (Passes/Shots), and Match Minute range (0′–90′).
+10. **Zero-Cost & Free Data Compliance:** Fully functional offline or locally without any paid APIs, billing risks, or required external subscriptions.
+
+---
 
 ## 🛠️ Technology Stack
 
-- Frontend: React.js
-- Backend: Python FastAPI
-- Data Processing: Pandas
-- Database: SQLite
-- AI Integration: Microsoft Foundry
-- Cloud: Microsoft Azure
+- **Frontend:** React 19, Vite, Vanilla CSS (Dark theme with `#b6f36b` green accents)
+- **Backend:** Python FastAPI, Uvicorn
+- **Analytics & Data Processing:** pandas, NumPy
+- **Testing:** Python `unittest` (17 automated unit tests), Oxlint
 
-## 🎯 Project Goal
+---
 
-To transform synthetic football data into explainable match intelligence for broadcasters, analysts, streaming platforms, and football fans.
+## 🏃 Setup and Run Instructions
 
-## ⚠️ Project Status
+### Prerequisites
+- Python 3.11+ (or existing `.venv`)
+- Node.js 18+ and npm
 
-Currently under development for the Microsoft Premier League Inside the Game Developer Hackathon 2026.
+### 1. Backend Setup
+From the repository root:
 
-All initial match data will be synthetic and used for demonstration purposes.
+```powershell
+# Activate virtual environment
+.\.venv\Scripts\Activate.ps1
 
-## 👨‍💻 Repository
+# Run the FastAPI server
+python -m uvicorn backend.main:app --port 8000 --reload
+```
 
-GitHub: https://github.com/240009001kl/matchmind-ai
+The API will be available at:
+- **API Base:** `http://127.0.0.1:8000/`
+- **Interactive OpenAPI Docs:** `http://127.0.0.1:8000/docs`
+- **Health Check:** `http://127.0.0.1:8000/health`
+
+### 2. Frontend Setup
+In a second terminal:
+
+```powershell
+# Navigate to frontend
+cd frontend
+
+# Install dependencies (if not already installed)
+npm install
+
+# Start the Vite development server
+npm run dev
+```
+
+The application will be live at:
+- **Frontend URL:** `http://localhost:5173/`
+
+---
+
+## 🧪 Testing and Verification
+
+### Backend Automated Unit Tests
+Run the comprehensive 17-test suite:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover tests
+```
+
+### Frontend Build & Linting Checks
+```powershell
+npm --prefix frontend run lint
+npm --prefix frontend run build
+```
+
+---
+
+## 📊 Free Football Data & Attribution
+
+MatchMind AI is built strictly according to zero-cost principles:
+- **No Paid APIs / No Subscriptions / Zero Billing Risk.**
+- **Real Match Dataset (Arsenal 1-0 Man City):** Sourced following the OpenFootball project (`openfootball`) and StatsBomb Open Data standards.
+- **Licenses:** CC0 1.0 Universal (Public Domain) & CC BY 4.0.
+- **Audit Documentation:** See [`docs/REAL_FOOTBALL_DATA_AUDIT.md`](docs/REAL_FOOTBALL_DATA_AUDIT.md) for full evaluation of Football-Data.org, StatsBomb, and OpenFootball.
+
+---
+
+## 🏆 Presentation Guide
+
+For a 3-minute hackathon demo walkthrough and presentation checklist, see [`docs/DEMO_PRESENTATION_GUIDE.md`](docs/DEMO_PRESENTATION_GUIDE.md).

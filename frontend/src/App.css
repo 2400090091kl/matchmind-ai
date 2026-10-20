@@ -1151,3 +1151,22 @@ select {
   border-radius: 6px;
   border: 1px solid #243527;
 }
+
+
+@media (max-width: 600px) {
+  .match-selector-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .match-selector-select {
+    width: 100%;
+  }
+  .comparison-selectors {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .comparison-vs {
+    text-align: center;
+    padding: 4px 0;
+  }
+}
