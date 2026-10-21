@@ -729,6 +729,7 @@ function App() {
       <VisualAnalytics
         events={filteredEvents}
         teamAnalytics={analytics.analytics}
+        isRealData={match.is_real_data}
       />
 
       {/* Important moments breakdown */}
@@ -1031,7 +1032,7 @@ function StatCard({
   );
 }
 
-function VisualAnalytics({ events, teamAnalytics }) {
+function VisualAnalytics({ events, teamAnalytics, isRealData = false }) {
   const teams = Object.entries(teamAnalytics || {});
 
   const shots = events
@@ -1180,7 +1181,7 @@ function VisualAnalytics({ events, teamAnalytics }) {
           ))}
 
           <p className="footnote">
-            {match.is_real_data
+            {isRealData
               ? "These charts use the illustrative key-event sample, not the full 90-minute box score totals."
               : "These charts use the available fictional event sample, not the separate match scoreboard totals."}
           </p>
