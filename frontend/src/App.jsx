@@ -2,7 +2,12 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const API = (import.meta.env && import.meta.env.VITE_API_URL) ? import.meta.env.VITE_API_URL : "http://127.0.0.1:8000";
+const API =
+  (import.meta.env && import.meta.env.VITE_API_URL)
+    ? import.meta.env.VITE_API_URL
+    : (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1")
+      ? ""
+      : "http://127.0.0.1:8000";
 
 function App() {
   const [selectedMatchId, setSelectedMatchId] = useState(1);
