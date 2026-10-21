@@ -157,15 +157,18 @@ def get_match_record(match_id: int):
 
 
 @app.get("/")
+@app.get("/api")
+@app.get("/api/")
 def home():
     return {
-        "message": "Welcome to MatchMind AI!",
+        "message": "Welcome to MatchMind AI API!",
         "status": "running",
         "version": "0.6.0"
     }
 
 
 @app.get("/health")
+@app.get("/api/health")
 def health():
     return {"status": "healthy"}
 

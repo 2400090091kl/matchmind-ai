@@ -8,3 +8,4 @@ from backend.main import app
 
 # Vercel ASGI serverless handler
 handler = app
+

@@ -1,0 +1,10 @@
+{
+  "name": "matchmind-ai",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Explainable AI football match intelligence and broadcast platform",
+  "scripts": {
+    "build": "node build.js",
+    "lint": "npm --prefix frontend run lint"
+  }
+}
